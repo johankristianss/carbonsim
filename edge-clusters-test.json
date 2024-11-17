@@ -1,0 +1,14 @@
+[
+	{
+		"name": "Lulea",
+		"nodes": 6,
+		"gpus_per_node": 2,
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/SE-SE4.csv"
+	},
+	{
+		"name": "Zagreb",
+		"nodes": 2,
+		"gpus_per_node": 2, 
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/HR.csv"
+	}
+]

@@ -1,0 +1,206 @@
+[
+	{
+		"name": "Lulea",
+		"nodes": 2,
+		"gpus_per_node": 2,
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/SE-SE4.csv"
+	},
+	{
+		"name": "Stockholm",
+		"nodes": 2,
+		"gpus_per_node": 2,
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/SE-SE3.csv"
+	},
+	{
+		"name": "Lund",
+		"nodes": 2,
+		"gpus_per_node": 2,
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/SE-SE4.csv"
+	},
+	{
+		"name": "Amsterdam",
+		"nodes": 2,
+		"gpus_per_node": 2,
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/NL.csv"
+	},
+	{
+		"name": "Brussel",
+		"nodes": 2,
+		"gpus_per_node":2, 
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/BE.csv"
+	},
+	{
+		"name": "Berlin",
+		"nodes": 2,
+		"gpus_per_node": 2,
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/DE.csv"
+	},
+	{
+		"name": "Rome",
+		"nodes": 2,
+		"gpus_per_node": 2, 
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/IT-CSO.csv"
+	},
+	{
+		"name": "Warsaw",
+		"nodes": 2,
+		"gpus_per_node": 2, 
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/PL.csv"
+	},
+	{
+		"name": "Paris",
+		"nodes": 2,
+		"gpus_per_node": 2, 
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/FR.csv"
+	},
+	{
+		"name": "London",
+		"nodes": 2,
+		"gpus_per_node": 2, 
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/GB.csv"
+	},
+	{
+		"name": "Copenhagen",
+		"nodes": 2,
+		"gpus_per_node": 2, 
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/DK-DK2.csv"
+	},
+	{
+		"name": "Oslo",
+		"nodes": 2,
+		"gpus_per_node": 2, 
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/NO-NO1.csv"
+	},
+	{
+		"name": "Bergen",
+		"nodes": 2,
+		"gpus_per_node": 2, 
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/NO-NO5.csv"
+	},
+	{
+		"name": "Budapest",
+		"nodes": 2,
+		"gpus_per_node": 2, 
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/HU.csv"
+	},
+	{
+		"name": "Oulu",
+		"nodes": 2,
+		"gpus_per_node": 2, 
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/FI.csv"
+	},
+	{
+		"name": "Athens",
+		"nodes": 2,
+		"gpus_per_node": 2, 
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/GR.csv"
+	},
+	{
+		"name": "Vilnius",
+		"nodes": 2,
+		"gpus_per_node": 2, 
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/LT.csv"
+	},
+	{
+		"name": "Riga",
+		"nodes": 2,
+		"gpus_per_node": 2, 
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/LV.csv"
+	},
+	{
+		"name": "VLuxembourg City",
+		"nodes": 2,
+		"gpus_per_node": 2, 
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/LU.csv"
+	},
+	{
+		"name": "Tallinn",
+		"nodes": 2,
+		"gpus_per_node": 2, 
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/EE.csv"
+	},
+	{
+		"name": "Zagreb",
+		"nodes": 2,
+		"gpus_per_node": 2, 
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/HR.csv"
+	},
+	{
+		"name": "Prague",
+		"nodes": 2,
+		"gpus_per_node": 2, 
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/CZ.csv"
+	},
+	{
+		"name": "Sofia",
+		"nodes": 2,
+		"gpus_per_node": 2, 
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/BG.csv"
+	},
+	{
+		"name": "Zurich",
+		"nodes": 2,
+		"gpus_per_node": 2, 
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/CH.csv"
+	},
+	{
+		"name": "Nicosia",
+		"nodes": 2,
+		"gpus_per_node": 2, 
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/CY.csv"
+	},
+	{
+		"name": "Vienna",
+		"nodes": 2,
+		"gpus_per_node": 2, 
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/AT.csv"
+	},
+	{
+		"name": "Reykjavik",
+		"nodes": 2,
+		"gpus_per_node": 2, 
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/IS.csv"
+	},
+	{
+		"name": "Bratislava",
+		"nodes": 2,
+		"gpus_per_node": 2, 
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/SK.csv"
+	},
+	{
+		"name": "Ljubljana",
+		"nodes": 2,
+		"gpus_per_node": 2, 
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/SI.csv"
+	},
+	{
+		"name": "Bucharest",
+		"nodes": 2,
+		"gpus_per_node": 2, 
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/RO.csv"
+	},
+	{
+		"name": "Dublin",
+		"nodes": 2,
+		"gpus_per_node": 2, 
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/IE.csv"
+	},
+	{
+		"name": "Trondheim",
+		"nodes": 2,
+		"gpus_per_node": 2, 
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/NO-NO3.csv"
+	},
+	{
+		"name": "Tromso",
+		"nodes": 2,
+		"gpus_per_node": 2, 
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/NO-NO4.csv"
+	},
+	{
+		"name": "Kristiansand",
+		"nodes": 2,
+		"gpus_per_node": 2, 
+		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/NO-NO2.csv"
+	}
+]
