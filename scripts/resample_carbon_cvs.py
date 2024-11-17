@@ -2,8 +2,8 @@ import os
 import pandas as pd
 
 # Define the directory paths
-input_dir = '/scratch/cognit/carbon'
-output_dir = '/scratch/cognit/carbon_1s'
+input_dir = './carbon'
+output_dir = './carbon_1s'
 
 # Create output directory if it doesn't exist
 os.makedirs(output_dir, exist_ok=True)
