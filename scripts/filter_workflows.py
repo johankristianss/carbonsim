@@ -12,8 +12,8 @@ def check_timelimit(file):
         print(f"Error reading {file}: {e}")
     return False
 
-source_directory = '/scratch/cognit/workloads'
-target_directory = '/scratch/cognit/filtered_workloads'
+source_directory = './workloads'
+target_directory = './filtered_workloads'
 
 # Create the target directory if it doesn't exist
 if not os.path.exists(target_directory):

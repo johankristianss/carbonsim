@@ -2,13 +2,15 @@
 	{
 		"name": "Lulea",
 		"nodes": 6,
-		"gpus_per_node": 2,
-		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/SE-SE4.csv"
+		"gpus_per_node": 20,
+		"carbon-intensity-trace": "./carbon_1s/SE-SE1.csv",
+	    "gpu_cost_euro_per_second": 0.001094
 	},
 	{
-		"name": "Zagreb",
-		"nodes": 2,
-		"gpus_per_node": 2, 
-		"carbon-intensity-trace": "/scratch/cognit/carbon_1s/HR.csv"
+		"name": "Warsaw",
+		"nodes": 6,
+		"gpus_per_node": 20, 
+		"carbon-intensity-trace": "./carbon_1s/PL.csv",
+	    "gpu_cost_euro_per_second": 0.000672
 	}
 ]

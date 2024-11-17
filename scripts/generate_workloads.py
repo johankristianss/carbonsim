@@ -2,12 +2,11 @@ import csv
 import os
 import random
 import pandas as pd
-import matplotlib.pyplot as plt
 
-slurm_csv_file_path = '/scratch/datacenter-challenge/202201/slurm-log.csv'
-app_csv_file_path = '/scratch/datacenter-challenge/202201/labelled_jobids.csv'
-base_dir = '/scratch/datacenter-challenge/202201/gpu'
-output_dir = '/scratch/cognit/workloads'
+slurm_csv_file_path = '/scratch/datasets/datacenter-challenge/202201/slurm-log.csv'
+app_csv_file_path = '/scratch/datasets/datacenter-challenge/202201/labelled_jobids.csv'
+base_dir = '/scratch/datasets/datacenter-challenge/202201/gpu'
+output_dir = './workloads'
 
 slurm_data_dict = {}
 with open(slurm_csv_file_path, mode='r') as csv_file:
@@ -31,6 +30,7 @@ for subdir in subdirs:
     files = [os.path.join(subdir, file) for file in os.listdir(subdir) if os.path.isfile(os.path.join(subdir, file)) and file.endswith('.csv')]
     all_files.extend(files)
 
+#selected_files = random.sample(all_files, 10)
 selected_files = random.sample(all_files, 100000)
 
 print("Selected Files:")
@@ -39,28 +39,21 @@ for file in selected_files:
 
 os.makedirs(output_dir, exist_ok=True)
 
-# idle_threshold = 0
-
 for idx, file in enumerate(selected_files):
     df = pd.read_csv(file)
-    df = df[['timestamp', 'power_draw_W']]
+    # print all headers
+    print(df.columns)
+    df = df[['timestamp', 'power_draw_W', 'memory_free_MiB', 'memory_used_MiB', 'utilization_memory_pct', 'utilization_gpu_pct']]
     df['timestamp'] = df['timestamp'] - df['timestamp'].min()
     df['timestamp'] = pd.to_datetime(df['timestamp'], unit='s')
     df['power_draw_W'] = pd.to_numeric(df['power_draw_W'], errors='coerce')
+    df['memory_free_MiB'] = pd.to_numeric(df['memory_free_MiB'], errors='coerce')
+    df['memory_used_MiB'] = pd.to_numeric(df['memory_used_MiB'], errors='coerce')
+    df['utilization_memory_pct'] = pd.to_numeric(df['utilization_memory_pct'], errors='coerce')
+    df['utilization_gpu_pct'] = pd.to_numeric(df['utilization_gpu_pct'], errors='coerce')
 
     df.set_index('timestamp', inplace=True)
     
-    # Resample and process the entire DataFrame
-    #df_resampled = df.resample('1S').mean().dropna().reset_index()
-    #df_resampled['timestamp'] = (df_resampled['timestamp'] - df_resampled['timestamp'].min()).dt.total_seconds()
-
-
-    #above_threshold = df['power_draw_W'] > idle_threshold
-    #first_above_idx = df.index[df['power_draw_W'] > idle_threshold][0]
-
-    # first_above_idx = above_threshold.idxmax()  # Get the index of the first occurrence above the threshold
-    #df_filtered = df.iloc[first_above_idx:].copy()
-    #df_filtered.set_index('timestamp', inplace=True)# Keep all rows from the first occurrence above the threshold onwards
     df_resampled = df.resample('1S').mean().dropna().reset_index()
     df_resampled['timestamp'] = (df_resampled['timestamp'] - df_resampled['timestamp'].min()).dt.total_seconds()
 
@@ -69,14 +62,11 @@ for idx, file in enumerate(selected_files):
     if job_id in slurm_data_dict:
         job_info = slurm_data_dict[job_id]
 
-        #print(int(job_info['mem_req']))
-        #if 	int(job_info['mem_req']) > 90000000:
-        #    print("Skipping index: ", idx)
-        #    continue
-        
         df_resampled.loc[:, 'id_user'] = job_info['id_user']
         df_resampled.loc[:, 'cpus_req'] = job_info['cpus_req']
         df_resampled.loc[:, 'mem_req'] = job_info['mem_req']
+        df_resampled.loc[:, 'gres_used'] = job_info['gres_used']
+        df_resampled.loc[:, 'nodes_alloc'] = job_info['nodes_alloc']
         df_resampled.loc[:, 'gres_used'] = job_info['gres_used']
         df_resampled.loc[:, 'timelimit'] = job_info['timelimit']
         df_resampled.loc[:, 'time_submit'] = job_info['time_submit']
@@ -90,4 +80,5 @@ for idx, file in enumerate(selected_files):
     
     output_file = os.path.join(output_dir, f'{idx}.csv')
     df_resampled.to_csv(output_file, index=False)
+    
     print(f"Processed data saved to {output_file}")
