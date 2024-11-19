@@ -1,8 +1,9 @@
 import csv
 
 class Process:
-    def __init__(self, name, initial_timestep, workload_csv_file):
+    def __init__(self, name, idx, initial_timestep, workload_csv_file):
         self.__name = name
+        self.__idx = idx
         self.__initial_timestep = initial_timestep
         self.__timestep = self.__initial_timestep
         self.__workload_csv_file = workload_csv_file
@@ -11,21 +12,30 @@ class Process:
         self.__cumulative_emission = 0.0
         self.__current_carbon_intensity = 0.0
         self.__current_energy = 0.0
-        self.__workload_dict = {}
+        self.__current_gpu_utilization = 0.0
+        self.__power_draw_W_dict = {}
+        self.__utilization_gpu_pct_dict = {}
 
         with open(self.__workload_csv_file, mode='r') as csvfile:
             csvreader = csv.DictReader(csvfile)
             for row in csvreader:
+                # print("----------------- row", idx)
+                # print(row)
+                # print("----------------- row end")
+
                 timestamp = float(row['timestamp'])
                 power_draw_W = float(row['power_draw_W'])
-                self.__workload_dict[timestamp] = power_draw_W
+                utilization_gpu_pct = float(row['utilization_gpu_pct'])
+                self.__power_draw_W_dict[timestamp] = power_draw_W
+                self.__utilization_gpu_pct_dict[timestamp] = utilization_gpu_pct
 
     def tick(self):
         self.__timestep += 1
-        if self.__timestep not in self.__workload_dict:
+        if self.__timestep not in self.__power_draw_W_dict:
             return True
 
-        current_energy = self.__workload_dict.get(self.__timestep, 0.0) / 3600.0
+        current_energy = self.__power_draw_W_dict.get(self.__timestep, 0.0) / 3600.0
+        self.__current_gpu_utilization = self.__utilization_gpu_pct_dict.get(self.__timestep, 0.0)
         
         # trapezoidal rule
         if self.__timestep > 1:
@@ -69,5 +79,13 @@ class Process:
         return self.__cumulative_emission / 1000
     
     @property
+    def gpu_utilization(self):
+        return self.__current_gpu_utilization
+
+    @property
     def timestep(self):
         return self.__timestep
+
+    @property
+    def idx(self):
+        return self.__idx

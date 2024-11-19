@@ -3,7 +3,7 @@ from process import *
 
 class TestProcess(unittest.TestCase):
     def test_process(self):
-        process = Process("test_process", 0, "/scratch/cognit/filtered_workloads/0.csv")
+        process = Process("test_process", 0, 0, "../filtered_workloads/0.csv")
         process.carbon_intensity = 15
         
         for _ in range(90000):

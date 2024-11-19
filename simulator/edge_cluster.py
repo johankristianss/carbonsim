@@ -52,8 +52,20 @@ class EdgeCluster:
             self.__cumulative_emission += process.emission
             self.__total_gpu_cost += self.__gpu_cost
             self.__total_processing_time += 1
+            
+            # print edge cluster name and utilization
+            # print(f'EdgeCluster <{self.__name}> utilization: {self.utilization}')
 
         self.__timestep += 1
+
+    def integrate_carbon_intensity(self, total_length_seconds):
+        integrated_carbon = 0.0
+
+        for timestep in range(self.__timestep, self.__timestep + total_length_seconds):
+            carbon_intensity = self.__carbon_intensity_dict.get(float(timestep), 0.0)
+            integrated_carbon += carbon_intensity
+
+        return integrated_carbon
 
     @property
     def carbon_intensity(self):

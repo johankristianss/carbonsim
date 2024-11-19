@@ -7,6 +7,7 @@ import numpy as np
 
 class Simulator:
     def __init__(self,
+                 alg,
                  max_processes,
                  max_days,
                  cluster_utilization_threshold ,
@@ -24,13 +25,14 @@ class Simulator:
         self.__max_processes = max_processes
         self.__max_days = max_days
         self.__wait_time = wait_time
+        self.__alg = alg
 
         self.result_dir = result_dir
         if not os.path.exists(self.result_dir):
             print("creating result dir: ", self.result_dir)
             os.makedirs(self.result_dir)
         
-        self.scheduler = Scheduler( csv_filename=result_dir + "/scheduler.csv")
+        self.scheduler = Scheduler(csv_filename=result_dir + "/scheduler.csv", alg=self.__alg)
 
     def should_finish(self, tick):
         return tick > self.__max_days*24*60*60
@@ -50,10 +52,16 @@ class Simulator:
             )
             self.scheduler.add_edge_cluster(edge_cluster)
         
-        csv_files = sorted([f for f in os.listdir(self.__workload_dir) if f.endswith('.csv')])
-        
+        csv_files = sorted(
+            [f for f in os.listdir(self.__workload_dir) if f.endswith('.csv')],
+            key=lambda x: int(os.path.splitext(x)[0])  # Extract numeric part and sort
+        )
+
         tick = 0
         for idx, csv_file in enumerate(csv_files):
+            next_process_idxs_counter = 20
+            next_process_idxs = [os.path.splitext(f)[0] for f in csv_files[idx + 1:idx + next_process_idxs_counter + 1]]
+
             if self.should_finish(tick):
                 break
             if idx == self.__max_processes: # stop adding new processes
@@ -65,12 +73,12 @@ class Simulator:
                     if self.should_finish(tick):
                         break
                 break
-            process = Process(f"test_process_{idx+1}", 0, os.path.join(self.__workload_dir, csv_file))
-            ok = self.scheduler.run(process)
+            process = Process(f"test_process_{idx}", idx, 0, os.path.join(self.__workload_dir, csv_file))
+            ok = self.scheduler.run(process, next_process_idxs)
             if not ok:
                 # tick until an edge-cluster is available
                 print("waiting for a cluster to become available, tick: ", tick)
-                while not self.scheduler.run(process):
+                while not self.scheduler.run(process, next_process_idxs):
                     self.scheduler.tick()
                     tick += 1
                     if self.should_finish(tick):
