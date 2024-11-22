@@ -49,6 +49,7 @@ class Simulator:
                 cluster_data['carbon-intensity-trace'],
                 cluster_data['gpu_cost_euro_per_second'],
                 self.__cluster_utilization_threshold,
+                self.result_dir + "/" + cluster_data['name'] + ".csv"
             )
             self.scheduler.add_edge_cluster(edge_cluster)
         
@@ -59,7 +60,7 @@ class Simulator:
 
         tick = 0
         for idx, csv_file in enumerate(csv_files):
-            next_process_idxs_counter = 20
+            next_process_idxs_counter = 40
             next_process_idxs = [os.path.splitext(f)[0] for f in csv_files[idx + 1:idx + next_process_idxs_counter + 1]]
 
             if self.should_finish(tick):

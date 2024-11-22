@@ -5,11 +5,9 @@ import unittest
 class TestSchedulerAlg(unittest.TestCase):
       def test_scheduler(self):
           scheduler = Scheduler(workloads_stats='../filtered_workloads_1s_stats')
-          edge_cluster_1 = EdgeCluster("umea", 1, 1, "../carbon_1s/SE-SE1.csv", 0.001101, 1.0)
-          edge_cluster_1.nodes = 1
-          edge_cluster_1.gpu_per_node = 1
+          edge_cluster_1 = EdgeCluster("umea", 1, 1, "../carbon_1s/SE-SE1.csv", 0.001101, 1.0, "./test_output/umea.csv")
           scheduler.add_edge_cluster(edge_cluster_1)
-          edge_cluster_2 = EdgeCluster("warsaw", 1, 1, "../carbon_1s/PL.csv", 0.001101, 1.0)
+          edge_cluster_2 = EdgeCluster("warsaw", 1, 1, "../carbon_1s/PL.csv", 0.001101, 1.0, "./test_output/warsaw.csv")
           scheduler.add_edge_cluster(edge_cluster_2)
           
           clusters = [edge_cluster_1, edge_cluster_2] 

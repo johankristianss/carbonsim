@@ -6,11 +6,11 @@ from scheduler import *
 class TestScheduler(unittest.TestCase):
     def test_scheduler(self):
         scheduler = Scheduler()
-        edge_cluster = EdgeCluster("umea", 1, 1, "../carbon_1s/SE-SE1.csv", 0.001101, 1.0)
+        edge_cluster = EdgeCluster("umea", 1, 1, "../carbon_1s/SE-SE1.csv", 0.001101, 1.0, "./test_output/umea.csv")
         scheduler.add_edge_cluster(edge_cluster)
-        edge_cluster = EdgeCluster("stockholm", 1, 1, "../carbon_1s/SE-SE3.csv", 0.001101, 1.0)
+        edge_cluster = EdgeCluster("stockholm", 1, 1, "../carbon_1s/SE-SE3.csv", 0.001101, 1.0, "./test_output/stockholm.csv")
         scheduler.add_edge_cluster(edge_cluster)
-        edge_cluster = EdgeCluster("lund", 1, 1, "../carbon_1s/SE-SE4.csv", 0.001101, 1.0)
+        edge_cluster = EdgeCluster("lund", 1, 1, "../carbon_1s/SE-SE4.csv", 0.001101, 1.0, "./test_output/lund.csv")
         scheduler.add_edge_cluster(edge_cluster)
 
         process = Process("test_process_1", 0, 0, "../filtered_workloads/0.csv")

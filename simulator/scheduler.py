@@ -12,7 +12,7 @@ class Scheduler:
         self.tick_count = 0
         self.csv_filename = csv_filename
         self.csvfile = open(self.csv_filename, 'w', newline='')
-        self.writer = csv.DictWriter(self.csvfile, fieldnames=['tick', 'cumulative_emission', 'cumulative_energy', 'utilization'])
+        self.writer = csv.DictWriter(self.csvfile, fieldnames=['tick', 'cumulative_emission', 'cumulative_energy', 'utilization', 'total_gpu_cost'])
         self.writer.writeheader()  # Write the header
         self.workloads_stats = workloads_stats
         self.__alg = alg
@@ -210,6 +210,12 @@ class Scheduler:
                 return False
             print("selected best edge cluster: ", edge_cluster.name)
             return edge_cluster.run(process)
+        elif self.__alg == 'greedy':
+            print("greedy scheduling")
+            ############# greedy scheduling ############
+            available_edge_clusters.sort(key=lambda edge_cluster: edge_cluster.carbon_intensity)
+            edge_cluster = available_edge_clusters[0]
+            return edge_cluster.run(process)
         elif self.__alg == 'random':
             ############# random scheduling ############
             edge_cluster = random.choice(available_edge_clusters)
@@ -227,7 +233,8 @@ class Scheduler:
             'tick': self.tick_count,
             'cumulative_emission': self.cumulative_emission,
             'cumulative_energy': self.cumulative_energy,
-            'utilization': self.get_total_utilization()
+            'utilization': self.get_total_utilization(),
+            'total_gpu_cost': self.total_gpu_cost,
         })
         self.tick_count += 1
 
