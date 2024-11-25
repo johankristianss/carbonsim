@@ -1,13 +1,16 @@
 import csv
 
+from stats import get_process_power_draw_stat
+
 class Process:
-    def __init__(self, name, idx, initial_timestep, workload_csv_file):
+    def __init__(self, name, idx, initial_timestep, workload_csv_file, workloads_stats_dir):
         self.__name = name
         self.__idx = idx
         self.__initial_timestep = initial_timestep
         self.__timestep = self.__initial_timestep
         self.__duration = 0
         self.__workload_csv_file = workload_csv_file
+        self.__workloads_stats_dir = workloads_stats_dir
         self.__cumulative_energy = 0.0
         self.__emission = 0.0
         self.__cumulative_emission = 0.0
@@ -33,6 +36,11 @@ class Process:
                 self.__power_draw_W_dict[timestamp] = power_draw_W
                 self.__utilization_gpu_pct_dict[timestamp] = utilization_gpu_pct
                 self.__utilization_memory_pct_dict[timestamp] = utilization_memory_pct
+
+        power_draw_mean, power_draw_median, total_length_seconds = get_process_power_draw_stat(self.__workloads_stats_dir, self.__idx)
+        self.__power_draw_mean = power_draw_mean
+        self.__power_draw_median = power_draw_median
+        self.__total_length_seconds = total_length_seconds
 
     def tick(self):
         self.__timestep += 1
@@ -104,3 +112,15 @@ class Process:
     @property
     def idx(self):
         return self.__idx
+
+    @property
+    def power_draw_mean(self):
+        return self.__power_draw_mean
+
+    @property
+    def power_draw_median(self):
+        return self.__power_draw_median
+
+    @property
+    def total_length_seconds(self):
+        return self.__total_length_seconds

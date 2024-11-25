@@ -3,7 +3,8 @@ from process import *
 
 class TestProcess(unittest.TestCase):
     def test_process(self):
-        process = Process("test_process", 0, 0, "../filtered_workloads/0.csv")
+        workloads_stats_dir = "../filtered_workloads_1s_stat"
+        process = Process("test_process", 0, 0, "../filtered_workloads/0.csv", workloads_stats_dir)
         process.carbon_intensity = 15
         
         for _ in range(90000):

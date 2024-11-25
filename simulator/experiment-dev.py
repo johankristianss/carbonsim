@@ -7,6 +7,7 @@ random_wait = True
 wait_time = 20  # seconds
 rate = 1.0  # Rate parameter (lambda) for the exponential distribution
 workload_dir = "./filtered_workloads_1s"
+workloads_stats_dir = "./filtered_workloads_1s_stats"
 #workload_dir = "/.filtered_workloads"
 cluster_config = "./edge-clusters-test.json"
 
@@ -18,7 +19,8 @@ def main():
                           random_wait,
                           wait_time,
                           rate, 
-                          workload_dir, 
+                          workload_dir,
+                          workloads_stats_dir,
                           cluster_config, 
                           "./results/dev")
     simulator.start()

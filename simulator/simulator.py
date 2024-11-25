@@ -14,12 +14,14 @@ class Simulator:
                  random_wait,
                  wait_time,
                  rate, 
-                 workload_dir, 
+                 workload_dir,
+                 workloads_stats_dir,
                  cluster_config,
                  result_dir):
         self.__random_wait = random_wait
         self.__rate = rate
         self.__workload_dir = workload_dir
+        self.__workloads_stats_dir = workloads_stats_dir
         self.__cluster_config = cluster_config
         self.__cluster_utilization_threshold = cluster_utilization_threshold
         self.__max_processes = max_processes
@@ -74,7 +76,7 @@ class Simulator:
                     if self.should_finish(tick):
                         break
                 break
-            process = Process(f"test_process_{idx}", idx, 0, os.path.join(self.__workload_dir, csv_file))
+            process = Process(f"test_process_{idx}", idx, 0, os.path.join(self.__workload_dir, csv_file), self.__workloads_stats_dir)
             ok = self.scheduler.run(process, next_process_idxs)
             if not ok:
                 # tick until an edge-cluster is available

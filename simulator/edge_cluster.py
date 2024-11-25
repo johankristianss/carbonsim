@@ -77,6 +77,7 @@ class EdgeCluster:
             process_dict['process_energy'] = process.energy
             process_dict['process_emission'] = process.emission
             process_dict['process_gpu_cost'] = process.duration * self.__gpu_cost
+            process_dict['process_name'] = process.name
             processes_array.append(process_dict)
 
         process_array_json = json.dumps(processes_array)

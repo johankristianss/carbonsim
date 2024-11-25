@@ -4,8 +4,9 @@ from process import *
 
 class TestEdgeCluster(unittest.TestCase):
     def test_run_process(self):
-        edge_cluster = EdgeCluster("test_cluster", 1, 1, "../carbon_1s/SE-SE1.csv", 0.001101, 1.0, "./test_output/test_cluster_output.csv")
-        process = Process("test_process", 0, 0, "../filtered_workloads/0.csv")
+        edge_cluster = EdgeCluster("test_cluster", 1, 1, "../carbon_1s_30d/SE-SE1.csv", 0.001101, 1.0, "./test_output/test_cluster_output.csv")
+        workloads_stats_dir = "./filtered_workloads_1s_stats"
+        process = Process("test_process", 0, 0, "../filtered_workloads/0.csv", workloads_stats_dir)
         edge_cluster.run(process)
 
         for _ in range(90000):
