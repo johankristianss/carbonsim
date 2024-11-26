@@ -61,20 +61,28 @@ class Simulator:
         )
 
         tick = 0
+        last_idx = 0
+        process_counter = 0
         for idx, csv_file in enumerate(csv_files):
             next_process_idxs_counter = 40
             next_process_idxs = [os.path.splitext(f)[0] for f in csv_files[idx + 1:idx + next_process_idxs_counter + 1]]
 
             if self.should_finish(tick):
+                last_idx = idx
                 break
             if idx == self.__max_processes: # stop adding new processes
                 # tick until all processes finished running
+                while not self.scheduler.finalize():
+                    self.scheduler.tick()
+                    tick += 1
                 while self.scheduler.num_running_processes > 0:
                     print(self.scheduler.num_running_processes, "processes still running, tick:", tick)
                     self.scheduler.tick()
                     tick += 1
                     if self.should_finish(tick):
+                        last_idx = idx
                         break
+                last_idx = idx
                 break
             process = Process(f"test_process_{idx}", idx, 0, os.path.join(self.__workload_dir, csv_file), self.__workloads_stats_dir)
             ok = self.scheduler.run(process, next_process_idxs)
@@ -85,7 +93,11 @@ class Simulator:
                     self.scheduler.tick()
                     tick += 1
                     if self.should_finish(tick):
+                        last_idx = idx
                         break
+                process_counter += 1
+            else: 
+                process_counter += 1
           
             if self.__random_wait:
                 waiting_time = np.random.exponential(1.0 / self.__rate)
@@ -96,6 +108,7 @@ class Simulator:
                     self.scheduler.tick()
                     tick += 1
                     if self.should_finish(tick):
+                        last_idx = idx
                         break
       
             self.scheduler.tick()
@@ -107,7 +120,10 @@ class Simulator:
         print("Total carbon emission [g]: ", self.scheduler.cumulative_emission)
         print("Total GPU energy [kWh]: ", self.scheduler.cumulative_energy)
         print("Total GPU cost [Euro]: ", self.scheduler.total_gpu_cost)
+        print("Total process added: ", process_counter)
+        print("Total scheduled processes: ", self.scheduler.total_processes)
         print("Total finished processes: ", self.scheduler.finished_processes)
+        print("Scheduler Pool Size:", self.scheduler.pool_size)
         print("Total processing time [h]: ", self.scheduler.total_processing_time/60/60)
         print("Theoretical max processing time [h]: ", self.scheduler.total_gpus * tick / 60 / 60)
         print("Total time [h]: ", tick/60/60)

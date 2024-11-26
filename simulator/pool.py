@@ -1,5 +1,3 @@
-import random
-
 class ProcessPool:
     def __init__(self, pool_size=10):
         self.pool_size = pool_size
@@ -12,27 +10,36 @@ class ProcessPool:
         else:
             return False
 
+    def is_full(self):
+        return len(self.pool) == self.pool_size
+
+    def is_not_empty(self):
+        return len(self.pool) != 0
+
+    def size(self):
+        return len(self.pool)
+
     def select_process(self):
-        if len(self.pool) == self.pool_size:
-            #energy = 0.0
-            #energy = process.total_length_seconds * process.power_draw_median
-            # sort processes by energy
+        if len(self.pool) == 0:
+            return None
+        
+        #self.pool.sort(key=lambda x: x.total_length_seconds * x.power_draw_median)
+        #self.pool.sort(key=lambda x: x.total_power_consumption)
+        self.pool.sort(key=lambda x: x.power_draw_median)
+        #self.pool.sort(key=lambda x: x.power_draw_mean)
+        #self.pool.sort(key=lambda x: x.total_power_consumption / x.total_length_seconds)
 
-            # make a copy of the pool
-            pool_copy = self.pool.copy()
-            pool_copy.sort(key=lambda x: x.total_length_seconds * x.power_draw_median)
 
-            # print process name and energy
-            print("--------------- pool ---------------")
-            for process in self.pool:
-                 print(process.name, process.total_length_seconds * process.power_draw_median)
+        #print("--------------- pool ---------------")
+        #for process in self.pool:
+        #    print(process.name, process.total_power_consumption)
 
-            #selected_process = random.choice(self.pool)
-            selected_process = pool_copy[len(pool_copy) - 1]
-            print("Selected process: ", selected_process.name)
-            print("bwfore remove: ", len(self.pool))
-            self.pool.remove(selected_process)
-            print("after remove: ", len(self.pool))
-            return selected_process
-        else:
-            return None 
+        #selected_process = random.choice(self.pool)
+        selected_process = self.pool[len(self.pool) - 1]
+        #print("Selected process: ", selected_process.name)
+        #print("before remove: ", len(self.pool))
+        self.pool.remove(selected_process)
+        #print("after remove: ", len(self.pool))
+        return selected_process
+        # else:
+        #     return None 

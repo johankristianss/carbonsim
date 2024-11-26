@@ -17,6 +17,7 @@ class EdgeCluster:
         self.__total_gpu_cost = 0.0
         self.__total_processing_time = 0
         self.__finsihed_processes = 0
+        self.__total_processes = 0
         self.__utilization_threshold = utilization_threshold 
 
         with open(carbon_csv_file, mode='r') as csvfile:
@@ -34,6 +35,7 @@ class EdgeCluster:
         print(f'EdgeCluster <{name}> created with {nodes} nodes and {gpu_per_node} GPUs per node')
 
     def run(self, process):
+        self.__total_processes += 1
         if self.utilization > self.__utilization_threshold:
             return False
         if self.available:
@@ -162,6 +164,10 @@ class EdgeCluster:
     @property
     def total_processing_time(self):
         return self.__total_processing_time
+
+    @property 
+    def total_processes(self):
+        return self.__total_processes
 
     @property
     def finished_processes(self):

@@ -31,7 +31,8 @@ def summarize_csv(file_path, output_path):
         "sum": df.sum(numeric_only=True),
         "count_zero": (df == 0).sum(numeric_only=True),
         "zero_ratio": (df == 0).sum(numeric_only=True) / len(df),
-        "total_length_seconds": len(df)
+        "total_length_seconds": len(df),
+        "total_power_consumption": df['power_draw_W'].sum()
     }
     
     # Create a DataFrame for the summary
@@ -39,7 +40,7 @@ def summarize_csv(file_path, output_path):
     
     # Rename columns
     summary_df.columns = ['column_name', 'mean', 'median', 'min', 'max', 'std', 'range', 
-                          'sum', 'count_zero', 'zero_ratio', 'total_length_seconds']
+                          'sum', 'count_zero', 'zero_ratio', 'total_length_seconds', 'total_power_consumption']
     
     # Save the summary to a new CSV file
     summary_df.to_csv(output_path, index=False)

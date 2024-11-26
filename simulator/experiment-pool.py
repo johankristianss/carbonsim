@@ -1,10 +1,10 @@
 from simulator import Simulator
 
 max_processes = 10000
-max_days = 20 
+max_days = 2000 
 cluster_utilization_threshold = 1.0
 random_wait = True 
-wait_time = 30  # seconds
+wait_time = 80  # seconds
 rate = 1.0  # Rate parameter (lambda) for the exponential distribution
 workload_dir = "./filtered_workloads_1s"
 workloads_stats_dir = "./filtered_workloads_1s_stats"
@@ -12,7 +12,7 @@ workloads_stats_dir = "./filtered_workloads_1s_stats"
 cluster_config = "./edge-clusters-small.json"
 
 def main():
-    simulator = Simulator("bigjobfirst",
+    simulator = Simulator("pool",
                           max_processes,
                           max_days,
                           cluster_utilization_threshold, 
@@ -22,7 +22,7 @@ def main():
                           workload_dir, 
                           workloads_stats_dir,
                           cluster_config, 
-                          "./results/bigjobfirst")
+                          "./results/pool")
     simulator.start()
 
 if __name__ == "__main__":

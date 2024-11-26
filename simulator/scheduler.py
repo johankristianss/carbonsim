@@ -2,6 +2,7 @@ import random
 import csv
 from stats import get_process_power_draw_stat
 from pool import ProcessPool
+import os
 
 class Scheduler:
     def __init__(self, csv_filename='./scheduler.csv', workloads_stats_dir='./filtered_workloads_1s_stats', alg='random'):
@@ -13,7 +14,7 @@ class Scheduler:
         self.writer.writeheader()
         self.workloads_stats_dir = workloads_stats_dir
         self.__alg = alg
-        self.__pool = ProcessPool(pool_size=10)
+        self.__pool = ProcessPool(pool_size=50)
 
     def add_edge_cluster(self, edge_cluster):
         self.__edge_clusters_dict[edge_cluster.name] = edge_cluster
@@ -25,7 +26,7 @@ class Scheduler:
             return memo[memo_key]
     
         # Get power stats for the current process
-        _, _, total_length_seconds = get_process_power_draw_stat(self.workloads_stats_dir, current_idx)
+        _, _, _, total_length_seconds = get_process_power_draw_stat(self.workloads_stats_dir, current_idx)
     
         # Base case: if no next processes, calculate the emission for the current process on all clusters
         if not next_process_idxs:
@@ -67,31 +68,51 @@ class Scheduler:
         # Store the result in memo
         memo[memo_key] = (min_total_emission, best_branch)
         return min_total_emission, best_branch
+   
+    def finalize(self):
+        if self.__alg == 'pool':
+            self.empty_pool()
+        if self.pool_size > 0:
+            return False
+        return True
+
+    def empty_pool(self):
+        while self.__pool.is_not_empty():
+            available_edge_clusters = [edge_cluster for edge_cluster in self.__edge_clusters_dict.values() if edge_cluster.available]
+            if len(available_edge_clusters) == 0:
+                return True
+            selected_process = self.__pool.select_process()
+            if selected_process is None:
+                return False
+            available_edge_clusters.sort(key=lambda edge_cluster: edge_cluster.carbon_intensity)
+            selected_edge_cluster = available_edge_clusters[0]
+            selected_edge_cluster.run(selected_process)
 
     def run(self, process, next_process_idxs=[]):
         print("=============================== run ================================")
-        print("running process: ", process.idx)
         available_edge_clusters = [edge_cluster for edge_cluster in self.__edge_clusters_dict.values() if edge_cluster.available]
         if not available_edge_clusters:
             return False
       
-        if self.__alg == 'bigjobfirst':
-            print("-----------------------  bigjobfirst scheduling -----------------------")
+        if self.__alg == 'pool':
+            print("-----------------------  pool scheduling -----------------------")
             if self.__pool.add_process(process) == False:
                 print("pool.add_process failed")
                 return False
-            else:
-                selected_process = self.__pool.select_process()
-                if selected_process is None:
-                    print("pool.select_process failed")
-                    return False
-      
-            print("selected process: ", selected_process.idx)
-            print("process: ", process.idx)
-
-            available_edge_clusters.sort(key=lambda edge_cluster: edge_cluster.carbon_intensity)
-            selected_edge_cluster = available_edge_clusters[0]
-            return selected_edge_cluster.run(selected_process)
+            
+            if self.__pool.is_full():
+                self.empty_pool()
+                # while self.__pool.is_not_empty():
+                #     available_edge_clusters = [edge_cluster for edge_cluster in self.__edge_clusters_dict.values() if edge_cluster.available]
+                #     if len(available_edge_clusters) == 0:
+                #         return True
+                #     selected_process = self.__pool.select_process()
+                #     if selected_process is None:
+                #         return False
+                #     available_edge_clusters.sort(key=lambda edge_cluster: edge_cluster.carbon_intensity)
+                #     selected_edge_cluster = available_edge_clusters[0]
+                #     selected_edge_cluster.run(selected_process)
+            return True
         elif self.__alg == 'lookahead':
             print("-----------------------  lookahead scheduling -----------------------")
             ############# lookahead scheduling ############
@@ -169,7 +190,15 @@ class Scheduler:
     @property
     def finished_processes(self):
         return sum([edge_cluster.finished_processes for edge_cluster in self.__edge_clusters_dict.values()])
-    
+   
+    @property
+    def total_processes(self):
+        return sum([edge_cluster.total_processes for edge_cluster in self.__edge_clusters_dict.values()])
+
+    @property
+    def pool_size(self):
+        return self.__pool.size()
+
     @property
     def total_gpus(self):
         return sum([edge_cluster.gpus for edge_cluster in self.__edge_clusters_dict.values()])

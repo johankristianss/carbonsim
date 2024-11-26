@@ -37,9 +37,10 @@ class Process:
                 self.__utilization_gpu_pct_dict[timestamp] = utilization_gpu_pct
                 self.__utilization_memory_pct_dict[timestamp] = utilization_memory_pct
 
-        power_draw_mean, power_draw_median, total_length_seconds = get_process_power_draw_stat(self.__workloads_stats_dir, self.__idx)
+        power_draw_mean, power_draw_median, total_power_consumption, total_length_seconds = get_process_power_draw_stat(self.__workloads_stats_dir, self.__idx)
         self.__power_draw_mean = power_draw_mean
         self.__power_draw_median = power_draw_median
+        self.__total_power_consumption = total_power_consumption
         self.__total_length_seconds = total_length_seconds
 
     def tick(self):
@@ -120,6 +121,10 @@ class Process:
     @property
     def power_draw_median(self):
         return self.__power_draw_median
+
+    @property
+    def total_power_consumption(self):
+        return self.__total_power_consumption
 
     @property
     def total_length_seconds(self):
