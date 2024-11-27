@@ -24,19 +24,20 @@ class ProcessPool:
             return None
         
         #self.pool.sort(key=lambda x: x.total_length_seconds * x.power_draw_median)
-        #self.pool.sort(key=lambda x: x.total_power_consumption)
-        self.pool.sort(key=lambda x: x.power_draw_median)
+        self.pool.sort(key=lambda x: x.total_power_consumption)
+        #self.pool.sort(key=lambda x: x.power_draw_median)
         #self.pool.sort(key=lambda x: x.power_draw_mean)
         #self.pool.sort(key=lambda x: x.total_power_consumption / x.total_length_seconds)
 
 
-        #print("--------------- pool ---------------")
-        #for process in self.pool:
-        #    print(process.name, process.total_power_consumption)
+        print("--------------- pool ---------------")
+        for process in self.pool:
+            print(process.name, process.total_power_consumption, process.power_draw_mean) 
+
 
         #selected_process = random.choice(self.pool)
         selected_process = self.pool[len(self.pool) - 1]
-        #print("Selected process: ", selected_process.name)
+        print("Selected process: ", selected_process.name)
         #print("before remove: ", len(self.pool))
         self.pool.remove(selected_process)
         #print("after remove: ", len(self.pool))

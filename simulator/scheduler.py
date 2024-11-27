@@ -19,9 +19,9 @@ class Scheduler:
     def add_edge_cluster(self, edge_cluster):
         self.__edge_clusters_dict[edge_cluster.name] = edge_cluster
 
-    def minimize_emissions(self, current_idx, next_process_idxs, clusters, memo={}):
+    def minimize_emissions(self, current_idx, next_processes_idx, clusters, memo={}):
         # Check if the result is already computed
-        memo_key = (current_idx, tuple(next_process_idxs), tuple(c.name for c in clusters))
+        memo_key = (current_idx, tuple(next_processes_idx), tuple(c.name for c in clusters))
         if memo_key in memo:
             return memo[memo_key]
     
@@ -29,7 +29,7 @@ class Scheduler:
         _, _, _, total_length_seconds = get_process_power_draw_stat(self.workloads_stats_dir, current_idx)
     
         # Base case: if no next processes, calculate the emission for the current process on all clusters
-        if not next_process_idxs:
+        if not next_processes_idx:
             min_emission = float('inf')
             best_cluster = None
             for cluster in clusters:
@@ -51,8 +51,8 @@ class Scheduler:
     
             # Calculate emissions and branch for the remaining processes
             next_emission, next_branch = self.minimize_emissions(
-                next_process_idxs[0],
-                next_process_idxs[1:],
+                next_processes_idx[0],
+                next_processes_idx[1:],
                 clusters,
                 memo
             )
@@ -88,35 +88,26 @@ class Scheduler:
             selected_edge_cluster = available_edge_clusters[0]
             selected_edge_cluster.run(selected_process)
 
-    def run(self, process, next_process_idxs=[]):
+    def run(self, process, next_process_csv_files=[]):
         print("=============================== run ================================")
         available_edge_clusters = [edge_cluster for edge_cluster in self.__edge_clusters_dict.values() if edge_cluster.available]
         if not available_edge_clusters:
             return False
       
         if self.__alg == 'pool':
-            print("-----------------------  pool scheduling -----------------------")
+            print("----------------------- pool scheduling -----------------------")
             if self.__pool.add_process(process) == False:
                 print("pool.add_process failed")
                 return False
             
             if self.__pool.is_full():
                 self.empty_pool()
-                # while self.__pool.is_not_empty():
-                #     available_edge_clusters = [edge_cluster for edge_cluster in self.__edge_clusters_dict.values() if edge_cluster.available]
-                #     if len(available_edge_clusters) == 0:
-                #         return True
-                #     selected_process = self.__pool.select_process()
-                #     if selected_process is None:
-                #         return False
-                #     available_edge_clusters.sort(key=lambda edge_cluster: edge_cluster.carbon_intensity)
-                #     selected_edge_cluster = available_edge_clusters[0]
-                #     selected_edge_cluster.run(selected_process)
             return True
         elif self.__alg == 'lookahead':
-            print("-----------------------  lookahead scheduling -----------------------")
+            print("----------------------- lookahead scheduling -----------------------")
             ############# lookahead scheduling ############
-            _, best_branch = self.minimize_emissions(process.idx, next_process_idxs, available_edge_clusters) 
+            next_processes_idx = [int(os.path.basename(f).split('.')[0]) for f in next_process_csv_files]
+            _, best_branch = self.minimize_emissions(process.idx, next_processes_idx, available_edge_clusters) 
             if best_branch is None:
                 print("best_branch is None")
                 return False
@@ -127,9 +118,10 @@ class Scheduler:
             print("selected best edge cluster: ", selected_edge_cluster.name)
             return selected_edge_cluster.run(process)
         elif self.__alg == 'greedy':
-            print("-----------------------  greedy scheduling -----------------------")
+            print("----------------------- greedy scheduling -----------------------")
             ############# greedy scheduling ############
             available_edge_clusters.sort(key=lambda edge_cluster: edge_cluster.carbon_intensity)
+
             selected_edge_cluster = available_edge_clusters[0]
             return selected_edge_cluster.run(process)
         elif self.__alg == 'random':
