@@ -95,7 +95,8 @@ class Simulator:
                         if self.should_finish(tick):
                             break
                     break
-                process = Process(f"test_process_{idx}", idx, 0, os.path.join(self.__workload_dir, csv_file), self.__workloads_stats_dir)
+                deadline = 60 * 5 # 2 minutes
+                process = Process(f"test_process_{idx}", idx, 0, deadline, os.path.join(self.__workload_dir, csv_file), self.__workloads_stats_dir)
                 ok = self.scheduler.run(process, next_process_filenames)
                 if not ok:
                     # tick until an edge-cluster is available

@@ -3,22 +3,20 @@ from simulator import Simulator
 max_processes = 10000
 max_days = 20 
 cluster_utilization_threshold = 1.0
-random_wait = True 
-wait_time = 80  # seconds
-rate = 1.0  # Rate parameter (lambda) for the exponential distribution
 workload_dir = "./filtered_workloads_1s"
 workloads_stats_dir = "./filtered_workloads_1s_stats"
-#workload_dir = "/.filtered_workloads"
 cluster_config = "./edge-clusters-small.json"
+log_dir = "./logs/80"
+log_file = "log_3.csv"
+
 
 def main():
     simulator = Simulator("greedy",
                           max_processes,
                           max_days,
                           cluster_utilization_threshold, 
-                          random_wait,
-                          wait_time,
-                          rate, 
+                          log_dir,
+                          log_file,
                           workload_dir,
                           workloads_stats_dir,
                           cluster_config, 

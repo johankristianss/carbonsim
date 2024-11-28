@@ -7,7 +7,7 @@ workload_dir = "./filtered_workloads_1s"
 workloads_stats_dir = "./filtered_workloads_1s_stats"
 cluster_config = "./edge-clusters-small.json"
 log_dir = "./logs/80"
-log_file = "log_2.csv"
+log_file = "log_3.csv"
 
 def main():
     simulator = Simulator("pool",

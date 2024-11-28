@@ -24,9 +24,9 @@ class ProcessPool:
             return None
         
         #self.pool.sort(key=lambda x: x.total_length_seconds * x.power_draw_median)
-        self.pool.sort(key=lambda x: x.total_power_consumption)
+        #self.pool.sort(key=lambda x: x.total_power_consumption)
         #self.pool.sort(key=lambda x: x.power_draw_median)
-        #self.pool.sort(key=lambda x: x.power_draw_mean)
+        self.pool.sort(key=lambda x: x.power_draw_mean)
         #self.pool.sort(key=lambda x: x.total_power_consumption / x.total_length_seconds)
 
 

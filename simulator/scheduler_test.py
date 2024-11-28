@@ -15,17 +15,17 @@ class TestScheduler(unittest.TestCase):
 
         workloads_stats_dir = "../filtered_workloads_1s_stats"
 
-        process = Process("test_process_1", 0, 0, "../filtered_workloads/0.csv", workloads_stats_dir)
+        process = Process("test_process_1", 0, 0, 60, "../filtered_workloads/0.csv", workloads_stats_dir)
         ok = scheduler.run(process)
         if not ok:
             print(f"failed to run process <{process.name}>")
         
-        process = Process("test_process_2", 0, 0, "../filtered_workloads/1.csv", workloads_stats_dir)
+        process = Process("test_process_2", 0, 0, 60, "../filtered_workloads/1.csv", workloads_stats_dir)
         ok = scheduler.run(process)
         if not ok:
             print(f"failed to run process <{process.name}>")
         
-        process = Process("test_process_3", 0, 0, "../filtered_workloads/3.csv", workloads_stats_dir)
+        process = Process("test_process_3", 0, 0, 60, "../filtered_workloads/3.csv", workloads_stats_dir)
         ok = scheduler.run(process)
         if not ok:
             print(f"failed to run process <{process.name}>")

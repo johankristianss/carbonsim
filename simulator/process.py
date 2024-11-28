@@ -3,9 +3,10 @@ import csv
 from stats import get_process_power_draw_stat
 
 class Process:
-    def __init__(self, name, idx, initial_timestep, workload_csv_file, workloads_stats_dir):
+    def __init__(self, name, idx, initial_timestep, deadline, workload_csv_file, workloads_stats_dir):
         self.__name = name
         self.__idx = idx
+        self.__deadline = deadline
         self.__initial_timestep = initial_timestep
         self.__timestep = self.__initial_timestep
         self.__duration = 0
@@ -45,9 +46,10 @@ class Process:
 
     def tick(self):
         self.__timestep += 1
-        self.__duration += 1
         if self.__timestep not in self.__power_draw_W_dict:
             return True
+        
+        self.__duration += 1
 
         current_energy = self.__power_draw_W_dict.get(self.__timestep, 0.0) / 3600.0
         self.__current_gpu_utilization = self.__utilization_gpu_pct_dict.get(self.__timestep, 0.0)
@@ -127,5 +129,12 @@ class Process:
         return self.__total_power_consumption
 
     @property
+    def deadline(self):
+        return self.__deadline
+
+    @property
     def total_length_seconds(self):
         return self.__total_length_seconds
+
+    def decrease_deadline(self):
+        self.__deadline -= 1

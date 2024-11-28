@@ -14,7 +14,7 @@ class TestSchedulerAlg(unittest.TestCase):
           workloads = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]  # List of workload indices
           
           # Minimize emissions
-          min_emission_total, best_branch = scheduler.minimize_emissions(0, workloads, clusters)
+          _, best_branch = scheduler.minimize_emissions(0, workloads, clusters)
 
           if best_branch is None:
                 print("No cluster found")
