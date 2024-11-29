@@ -17,6 +17,7 @@ class Scheduler:
         self.__alg = alg
         self.__pool = ProcessPool(pool_size=50)
         self.__timepool = ProcessTimePool(power_threshold=150)
+        self.average_utilization_sum = 0
 
     def add_edge_cluster(self, edge_cluster):
         self.__edge_clusters_dict[edge_cluster.name] = edge_cluster
@@ -52,7 +53,7 @@ class Scheduler:
             current_emission = cluster.integrate_carbon_intensity(total_length_seconds)
     
             # Calculate emissions and branch for the remaining processes
-            next_emission, next_branch = self.minimize_emissions(
+            next_emission, next_branch = self.search_tree(
                 next_processes_idx[0],
                 next_processes_idx[1:],
                 clusters,
@@ -107,13 +108,12 @@ class Scheduler:
                 print("selected_processes is empty")
                 return True  # processes are queued in the pool, but don't need to run now
 
-            print("            ------------------------------------- ")
             for selected_process in selected_processes:
                 available_edge_clusters = [edge_cluster for edge_cluster in self.__edge_clusters_dict.values() if edge_cluster.available]
                 available_edge_clusters.sort(key=lambda edge_cluster: edge_cluster.carbon_intensity)
                 if len(available_edge_clusters) == 0:
                     return True # we return True because the process was added to the timepool
-                print("selected process: ", selected_process.name)
+                #print("selected process: ", selected_process.name)
                 selected_edge_cluster = available_edge_clusters[0]
                 if selected_edge_cluster.run(selected_process):
                     self.__timepool.remove_process(selected_process.name)
@@ -121,12 +121,12 @@ class Scheduler:
             return True
         if self.__alg == 'pool':
             print("----------------------- pool scheduling -----------------------")
+            if self.__pool.is_full():
+                self.empty_pool()
             if self.__pool.add_process(process) == False:
                 print("pool.add_process failed")
                 return False
             
-            if self.__pool.is_full():
-                self.empty_pool()
             return True
         elif self.__alg == 'lookahead':
             print("----------------------- lookahead scheduling -----------------------")
@@ -171,6 +171,9 @@ class Scheduler:
     def tick(self):
         for edge_cluster in self.__edge_clusters_dict.values():
             edge_cluster.tick()
+
+        total_utilization = self.get_total_utilization()
+        self.average_utilization_sum += total_utilization
 
         self.writer.writerow({
             'tick': self.tick_count,
@@ -224,6 +227,10 @@ class Scheduler:
     @property
     def pool_size(self):
         return self.__pool.size()
+
+    @property
+    def avg_utilization(self):
+        return self.average_utilization_sum / self.tick_count
 
     @property
     def total_gpus(self):

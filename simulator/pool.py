@@ -23,11 +23,9 @@ class ProcessPool:
         if len(self.pool) == 0:
             return None
         
-        #self.pool.sort(key=lambda x: x.total_length_seconds * x.power_draw_median)
         #self.pool.sort(key=lambda x: x.total_power_consumption)
         #self.pool.sort(key=lambda x: x.power_draw_median)
         self.pool.sort(key=lambda x: x.power_draw_mean)
-        #self.pool.sort(key=lambda x: x.total_power_consumption / x.total_length_seconds)
 
 
         print("--------------- pool ---------------")
@@ -42,5 +40,3 @@ class ProcessPool:
         self.pool.remove(selected_process)
         #print("after remove: ", len(self.pool))
         return selected_process
-        # else:
-        #     return None 

@@ -39,21 +39,11 @@ class ProcessTimePool:
         if len(selected_processes) == 0:
             return None
 
-
-        print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
-        print("pool size: ", len(self.pool))
-        print("selected size: ", len(selected_processes))
-        print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
-
-
-        #
-        # selected_processes.sort(key=lambda x: x.power_draw_mean)
-
         # sort in reverse order
         selected_processes.sort(key=lambda x: x.power_draw_mean, reverse=True)
 
-        print("time pool ----------- ")
-        for process in selected_processes:
-            print(process.name, process.power_draw_mean, process.deadline)
+        # print("time pool ----------- ")
+        # for process in selected_processes:
+        #     print(process.name, process.power_draw_mean, process.deadline)
 
         return selected_processes

@@ -37,6 +37,57 @@ class Simulator:
     def should_finish(self, tick):
         return tick > self.__max_days*24*60*60
 
+    def write_summary_to_csv(self, process_counter, tick, file_path="summary.csv"):
+         headers = [
+             "alg",
+             "log_file",
+             "log_file_dir",
+             "total_gpus", 
+             "total_carbon_emission", 
+             "total_gpu_energy", 
+             "total_gpu_cost",
+             "total_added_processes", 
+             "total_scheduled_processes", 
+             "total_finished_processes", 
+             "scheduler_pool_size", 
+             "total_processing_time",
+             "teoretical_max_processing_time", 
+             "avg_utilization", 
+             "total_time"
+         ]
+         
+         data = [
+             self.__alg,
+             self.__log_file,
+             self.__log_file_dir,
+             self.scheduler.total_gpus,
+             self.scheduler.cumulative_emission,
+             self.scheduler.cumulative_energy,
+             self.scheduler.total_gpu_cost,
+             process_counter,
+             self.scheduler.total_processes,
+             self.scheduler.finished_processes,
+             self.scheduler.pool_size,
+             self.scheduler.total_processing_time / 3600,  # Convert seconds to hours
+             self.scheduler.total_gpus * tick / 3600,     # Convert ticks to hours
+             self.scheduler.avg_utilization,
+             tick / 3600                             # Convert ticks to hours
+         ]
+         
+         # Check if the file exists
+         file_exists = os.path.isfile(file_path)
+         
+         # Open the file in append mode
+         with open(file_path, mode='a', newline='') as file:
+             writer = csv.writer(file)
+             
+             # Write the header if the file is new
+             if not file_exists:
+                 writer.writerow(headers)
+             
+             # Append the data
+             writer.writerow(data)
+
     def start(self):
         with open(self.__cluster_config, 'r') as f:
             edge_clusters_data = json.load(f)
@@ -122,6 +173,8 @@ class Simulator:
         
         print()
         print("------------------------- Simulation finished -------------------------")
+        print("Algorithm: ", self.__alg)
+        print("Log file: ", self.__log_file)
         print("Total number of GPUs: ", self.scheduler.total_gpus)
         print("Total carbon emission [g]: ", self.scheduler.cumulative_emission)
         print("Total GPU energy [kWh]: ", self.scheduler.cumulative_energy)
@@ -132,4 +185,7 @@ class Simulator:
         print("Scheduler Pool Size:", self.scheduler.pool_size)
         print("Total processing time [h]: ", self.scheduler.total_processing_time/60/60)
         print("Theoretical max processing time [h]: ", self.scheduler.total_gpus * tick / 60 / 60)
+        print("Average utilization: ", self.scheduler.avg_utilization)
         print("Total time [h]: ", tick/60/60)
+
+        self.write_summary_to_csv(process_counter, tick, file_path=self.result_dir + "/summary.csv")
