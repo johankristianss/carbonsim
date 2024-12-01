@@ -1,16 +1,19 @@
+import sys
+sys.path.append('/home/johan/dev/github/johankristianss/carbonsim/simulator')
+
 from simulator import Simulator
 
 max_processes = 10000
-max_days = 2000
+max_days = 2000 
 cluster_utilization_threshold = 1.0
 workload_dir = "./filtered_workloads_1s"
 workloads_stats_dir = "./filtered_workloads_1s_stats"
 cluster_config = "./edge-clusters-small.json"
 log_dir = "./logs/60"
-log_file = "log_0.csv"
+log_file = "log_1.csv"
 
-alg = "lookahead"
-results_dir = "./results/dev"
+alg = "pool"
+results_dir = "./results/60/pool_mean_pow"
 timepool_power_threshold = 150 # watts
 timepool_process_maxwait = 60 * 2 # seconds
 pool_size = 50

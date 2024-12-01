@@ -8,6 +8,10 @@ import csv
 class Simulator:
     def __init__(self,
                  alg,
+                 timepool_power_threshold,
+                 timepool_process_maxwait,
+                 pool_size,
+                 pool_alg,
                  max_processes,
                  max_days,
                  cluster_utilization_threshold,
@@ -26,13 +30,17 @@ class Simulator:
         self.__max_processes = max_processes
         self.__max_days = max_days
         self.__alg = alg
+        self.__timepool_power_threshold = timepool_power_threshold
+        self.__timepool_process_maxwait = timepool_process_maxwait
+        self.__pool_size = pool_size
+        self.__pool_alg = pool_alg
 
         self.result_dir = result_dir
         if not os.path.exists(self.result_dir):
             print("creating result dir: ", self.result_dir)
             os.makedirs(self.result_dir)
         
-        self.scheduler = Scheduler(csv_filename=result_dir + "/scheduler.csv", alg=self.__alg)
+        self.scheduler = Scheduler(csv_filename=result_dir + "/scheduler.csv", alg=self.__alg, timepool_power_threshold=self.__timepool_power_threshold, pool_size=self.__pool_size, pool_alg=self.__pool_alg)
 
     def should_finish(self, tick):
         return tick > self.__max_days*24*60*60
@@ -124,7 +132,7 @@ class Simulator:
             tick = 0
             process_counter = 0
             for idx, csv_dict in enumerate(csv_arr):
-                scan_size = 40
+                scan_size = 10 
                 end_idx = min(idx + scan_size, len(csv_arr))
                 next_elements = csv_arr[idx:end_idx]
                 next_process_filenames = [csv_dict["csv_file"] for csv_dict in next_elements]
@@ -146,8 +154,7 @@ class Simulator:
                         if self.should_finish(tick):
                             break
                     break
-                deadline = 60 * 5 # 2 minutes
-                process = Process(f"test_process_{idx}", idx, 0, deadline, os.path.join(self.__workload_dir, csv_file), self.__workloads_stats_dir)
+                process = Process(f"test_process_{idx}", idx, 0, self.__timepool_process_maxwait, os.path.join(self.__workload_dir, csv_file), self.__workloads_stats_dir)
                 ok = self.scheduler.run(process, next_process_filenames)
                 if not ok:
                     # tick until an edge-cluster is available

@@ -4,9 +4,10 @@ from stats import get_process_power_draw_stat
 from pool import ProcessPool
 from timepool import ProcessTimePool
 import os
+from copy import deepcopy
 
 class Scheduler:
-    def __init__(self, csv_filename='./scheduler.csv', workloads_stats_dir='./filtered_workloads_1s_stats', alg='random'):
+    def __init__(self, csv_filename='./scheduler.csv', workloads_stats_dir='./filtered_workloads_1s_stats', alg='random', timepool_power_threshold=150, pool_size=50, pool_alg="mean"):
         self.__edge_clusters_dict = {}
         self.tick_count = 0
         self.csv_filename = csv_filename
@@ -15,14 +16,82 @@ class Scheduler:
         self.writer.writeheader()
         self.workloads_stats_dir = workloads_stats_dir
         self.__alg = alg
-        self.__pool = ProcessPool(pool_size=50)
-        self.__timepool = ProcessTimePool(power_threshold=150)
+        self.__pool = ProcessPool(pool_size=pool_size, pool_alg=pool_alg)
+        self.__timepool = ProcessTimePool(power_threshold=timepool_power_threshold)
         self.average_utilization_sum = 0
 
     def add_edge_cluster(self, edge_cluster):
         self.__edge_clusters_dict[edge_cluster.name] = edge_cluster
 
     def search_tree(self, current_idx, next_processes_idx, clusters, memo={}):
+        """
+        Recursively searches for the optimal process-to-cluster assignment
+        based on carbon emissions and resource constraints.
+        """
+        # Create a unique memoization key
+        memo_key = (current_idx, tuple(next_processes_idx), tuple(c.gpus for c in clusters))
+        if memo_key in memo:
+            return memo[memo_key]
+    
+        # Get power stats for the current process
+        _, _, _, total_length_seconds = get_process_power_draw_stat(self.workloads_stats_dir, current_idx)
+    
+        # Base case: If no more processes are left to assign
+        if not next_processes_idx:
+            min_emission = float('inf')
+            best_cluster = None
+    
+            for cluster in clusters:
+                if cluster.gpus > 0:  # Only consider clusters with available GPUs
+                    current_emission = cluster.integrate_carbon_intensity(total_length_seconds)
+                    if current_emission < min_emission:
+                        min_emission = current_emission
+                        best_cluster = cluster
+    
+            # If no valid placement is found, return infinity
+            if best_cluster is None:
+                memo[memo_key] = (float('inf'), [])
+                return float('inf'), []
+    
+            # Return the best placement for the last process
+            memo[memo_key] = (min_emission, [best_cluster])
+            return min_emission, [best_cluster]
+    
+        # Recursive case: Assign the current process and proceed with the rest
+        min_total_emission = float('inf')
+        best_branch = None
+    
+        for cluster in clusters:
+            # Skip clusters without available GPUs
+            if cluster.gpus <= 0:
+                continue
+    
+            # Simulate assigning the process to this cluster
+            cluster.gpus -= 1  # Temporarily decrease available GPUs
+            current_emission = cluster.integrate_carbon_intensity(total_length_seconds)
+    
+            # Recursively calculate emissions for the remaining processes
+            next_emission, next_branch = self.search_tree(
+                next_processes_idx[0],  # Assign the next process
+                next_processes_idx[1:],  # Remaining processes
+                clusters,  # Pass updated clusters
+                memo  # Memoization dictionary
+            )
+            cluster.gpus += 1  # Restore GPU count after recursion
+    
+            # Total emission for the current path
+            total_emission = current_emission + next_emission
+    
+            # Update the best branch if the current path is better
+            if total_emission < min_total_emission:
+                min_total_emission = total_emission
+                best_branch = [cluster] + next_branch
+    
+        # Store the result in memo
+        memo[memo_key] = (min_total_emission, best_branch)
+        return min_total_emission, best_branch
+
+    def search_tree_old(self, current_idx, next_processes_idx, clusters, memo={}):
         # Check if the result is already computed
         memo_key = (current_idx, tuple(next_processes_idx), tuple(c.name for c in clusters))
         if memo_key in memo:
@@ -132,7 +201,9 @@ class Scheduler:
             print("----------------------- lookahead scheduling -----------------------")
             ############# lookahead scheduling ############
             next_processes_idx = [int(os.path.basename(f).split('.')[0]) for f in next_process_csv_files]
+            print("next_processes_idx: ", next_processes_idx)
             available_edge_clusters = [edge_cluster for edge_cluster in self.__edge_clusters_dict.values() if edge_cluster.available]
+            print("available_edge_clusters: ", [edge_cluster.name for edge_cluster in available_edge_clusters])
             if not available_edge_clusters:
                 return False
             _, best_branch = self.search_tree(process.idx, next_processes_idx, available_edge_clusters) 

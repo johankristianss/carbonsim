@@ -12,17 +12,28 @@ cluster_config = "./edge-clusters-small.json"
 log_dir = "./logs/30"
 log_file = "log_0.csv"
 
+alg = "timepool"
+results_dir = "./results/30/timepool"
+timepool_power_threshold = 150 # watts
+timepool_process_maxwait = 60 * 2 # seconds
+pool_size = 50
+pool_alg = "mean"
+
 def main():
-    simulator = Simulator("timepool",
+    simulator = Simulator(alg,
+                          timepool_power_threshold,
+                          timepool_process_maxwait,
+                          pool_size,
+                          pool_alg,
                           max_processes,
                           max_days,
-                          cluster_utilization_threshold, 
+                          cluster_utilization_threshold,
                           log_dir,
                           log_file,
-                          workload_dir, 
+                          workload_dir,
                           workloads_stats_dir,
-                          cluster_config, 
-                          "./results/30/timepool")
+                          cluster_config,
+                          results_dir)
     simulator.start()
 
 if __name__ == "__main__":

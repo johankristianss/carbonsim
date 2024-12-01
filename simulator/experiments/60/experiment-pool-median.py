@@ -9,20 +9,31 @@ cluster_utilization_threshold = 1.0
 workload_dir = "./filtered_workloads_1s"
 workloads_stats_dir = "./filtered_workloads_1s_stats"
 cluster_config = "./edge-clusters-small.json"
-log_dir = "./logs/30"
-log_file = "log_0.csv"
+log_dir = "./logs/60"
+log_file = "log_1.csv"
+
+alg = "pool"
+results_dir = "./results/60/pool_median_pow"
+timepool_power_threshold = 150 # watts
+timepool_process_maxwait = 60 * 2 # seconds
+pool_size = 50
+pool_alg = "median"
 
 def main():
-    simulator = Simulator("lookahead",
+    simulator = Simulator(alg,
+                          timepool_power_threshold,
+                          timepool_process_maxwait,
+                          pool_size,
+                          pool_alg,
                           max_processes,
                           max_days,
-                          cluster_utilization_threshold, 
+                          cluster_utilization_threshold,
                           log_dir,
                           log_file,
-                          workload_dir, 
+                          workload_dir,
                           workloads_stats_dir,
-                          cluster_config, 
-                          "./results/30/lookahead")
+                          cluster_config,
+                          results_dir)
     simulator.start()
 
 if __name__ == "__main__":

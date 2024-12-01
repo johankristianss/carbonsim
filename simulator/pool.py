@@ -1,6 +1,7 @@
 class ProcessPool:
-    def __init__(self, pool_size=10):
+    def __init__(self, pool_size=10, pool_alg="mean"):
         self.pool_size = pool_size
+        self.pool_alg = pool_alg
         self.pool = []
 
     def add_process(self, process):
@@ -23,20 +24,20 @@ class ProcessPool:
         if len(self.pool) == 0:
             return None
         
-        #self.pool.sort(key=lambda x: x.total_power_consumption)
-        #self.pool.sort(key=lambda x: x.power_draw_median)
-        self.pool.sort(key=lambda x: x.power_draw_mean)
-
-
         print("--------------- pool ---------------")
-        for process in self.pool:
-            print(process.name, process.total_power_consumption, process.power_draw_mean) 
+        print("Pool algorithm: ", self.pool_alg)
+        if self.pool_alg == "mean":
+            self.pool.sort(key=lambda x: x.power_draw_mean)
+        elif self.pool_alg == "median":
+            self.pool.sort(key=lambda x: x.power_draw_median)
+        elif self.pool_alg == "energy":
+            self.pool.sort(key=lambda x: x.total_power_consumption)
 
+        # print("--------------- pool ---------------")
+        # for process in self.pool:
+        #     print(process.name, process.total_power_consumption, process.power_draw_mean) 
 
-        #selected_process = random.choice(self.pool)
         selected_process = self.pool[len(self.pool) - 1]
         print("Selected process: ", selected_process.name)
-        #print("before remove: ", len(self.pool))
         self.pool.remove(selected_process)
-        #print("after remove: ", len(self.pool))
         return selected_process
