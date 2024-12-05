@@ -208,6 +208,10 @@ class EdgeCluster:
     def finished_processes(self):
         return self.__finsihed_processes
 
+    @property
+    def current_carbon_intensity(self):
+        return self.__carbon_intensity_dict.get(self.__timestep, 0.0)
+
     def __deepcopy__(self, memo):
         """
         Custom deepcopy implementation to avoid copying non-serializable attributes.
