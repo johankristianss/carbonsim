@@ -2,15 +2,18 @@ import random
 from deap import base, creator, tools, algorithms
 
 clusters = {
-    "A": {"GPUs": 2, "CO2": 10},
-    "B": {"GPUs": 2, "CO2": 100},
+    "Lulea": {"GPUs": 2, "CO2": 10},
+    "Berlin": {"GPUs": 1, "CO2": 100},
+    "Warsaw": {"GPUs": 1, "CO2": 800},
+    "Stockholm": {"GPUs": 1, "CO2": 20},
 }
 
 workloads = [
     {"id": 1, "power": 6, "duration": 100, "deadline": 6},
     {"id": 2, "power": 230, "duration": 100, "deadline": 10},
-    {"id": 3, "power": 260, "duration": 100, "deadline": -100},
+    {"id": 3, "power": 260, "duration": 100, "deadline": 100},
     {"id": 4, "power": 30, "duration": 100, "deadline": 200},
+    {"id": 5, "power": 350, "duration": 100, "deadline": 200},
 ]
 
 def calculate_fitness(schedule):
@@ -25,6 +28,7 @@ def calculate_fitness(schedule):
 
     energy_penalty = 0
     deadline_penalty = 0
+    
     print("---------------------")
     for workload, cluster in zip(workloads, schedule):
         print("workload: ", workload)
@@ -41,8 +45,8 @@ def calculate_fitness(schedule):
         emission = co2_intensity * power # * duration
         energy_penalty += emission
 
-        if workload["deadline"] < 0:
-            deadline_penalty += abs(workload["deadline"]) * 100
+        # if workload["deadline"] < 0:
+        #     deadline_penalty += abs(workload["deadline"]) * 100
 
     min_energy_penalty = 0
     max_energy_penalty = 350 * 1000 # Max power = 350W, Max CO2 intensity = 1000

@@ -4,6 +4,7 @@ from deap import base, creator, tools, algorithms
 import sys
 sys.path.append('/home/johan/dev/github/johankristianss/carbonsim/simulator')
 from stats import get_process_power_draw_stat
+from edge_cluster import EdgeCluster
 
 clusters = {
     "A": {"GPUs": 2, "CO2": 10},
@@ -77,9 +78,27 @@ def mutate_individual(individual):
             individual[i] = random.choice(list(clusters.keys()))
     return individual,
 
+# clusters = {
+#       "A": {"GPUs": 2, "CO2": 10},
+#       "B": {"GPUs": 2, "CO2": 100},
+#   }
+
+def generate_clusters(timestep, edge_clusters):
+    clusters = {}
+    for edge_cluster in edge_clusters:
+        clusters[edge_cluster.name] = edge_cluster
+    return clusters
+
 
 # Main GA Process
 def main():
+    # edge_clusters = []
+    # edge_cluster = EdgeCluster("lulea", 1, 2, "../../carbon_1s_30d/SE-SE1.csv", 0.001101, 1.0, "./test_output/umea.csv")
+    # edge_clusters.append(edge_cluster)
+    # edge_cluster = EdgeCluster("warsaw", 1, 2, "../../carbon_1s_30d/PL.csv", 0.001101, 1.0, "./test_output/umea.csv")
+    # edge_clusters.append(edge_cluster)
+
+
     workloads = generate_workload_pool([1, 20, 3, 4, 400])
 
     creator.create("FitnessMax", base.Fitness, weights=(1.0,))
