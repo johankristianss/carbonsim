@@ -1,6 +1,5 @@
 import csv
 import json
-import copy
 
 class EdgeCluster:
     def __init__(self, name, nodes, gpu_per_node, carbon_csv_file, cost, utilization_threshold, result_csv_filename):
@@ -34,6 +33,9 @@ class EdgeCluster:
         self.__results_writer.writeheader()
 
         print(f'EdgeCluster <{name}> created with {nodes} nodes and {gpu_per_node} GPUs per node')
+
+    def __del__(self):
+        self.__result_csvfile.close()
 
     @classmethod
     def empty(cls):

@@ -17,8 +17,6 @@ class ProcessTimePool:
         for process in self.pool:
             if process.name == process_name:
                 self.pool.remove(process)
-                return True
-        return
 
     def select_processes(self):
         if len(self.pool) == 0:

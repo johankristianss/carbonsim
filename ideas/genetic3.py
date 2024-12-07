@@ -1,27 +1,19 @@
 import random
-import os
 from deap import base, creator, tools, algorithms
-import sys
-sys.path.append('/home/johan/dev/github/johankristianss/carbonsim/simulator')
-from stats import get_process_power_draw_stat
-from edge_cluster import EdgeCluster
 
+# Problem Data
 clusters = {
     "A": {"GPUs": 2, "CO2": 10},
     "B": {"GPUs": 2, "CO2": 100},
 }
+workloads = [
+    {"id": 1, "power": 6, "duration": 100, "deadline": 6},
+    {"id": 2, "power": 230, "duration": 100, "deadline": 10},
+    {"id": 3, "power": 260, "duration": 100, "deadline": -100},
+    {"id": 4, "power": 30, "duration": 100, "deadline": 200},
+]
 
-workloads_stats_dir = "../../filtered_workloads_1s_stats"
-
-def generate_workload_pool(workload_indicies):
-    workloads = []
-    for idx in workload_indicies:
-        power_draw_mean, _, _, duration, = get_process_power_draw_stat(workloads_stats_dir, idx)
-        workloads.append({"id": idx, "power": power_draw_mean, "duration": duration, "deadline": 60})
-
-    return workloads
-
-def calculate_fitness(schedule, workloads, clusters):
+def calculate_fitness(schedule):
     penalty = 0
   
     # print("Clusters:", clusters)
@@ -71,6 +63,22 @@ def calculate_fitness(schedule, workloads, clusters):
 
     return (-penalty,)
 
+# Genetic Algorithm Setup
+creator.create("FitnessMax", base.Fitness, weights=(1.0,))
+
+#creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
+#creator.create("Individual", list, fitness=creator.FitnessMin)
+creator.create("Individual", list, fitness=creator.FitnessMax)
+
+toolbox = base.Toolbox()
+toolbox.register("attr_cluster", lambda: random.choice(list(clusters.keys())))
+#toolbox.register("attr_cluster", lambda: random.choice(list(clusters.keys()) + ["wait"]))
+toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.attr_cluster, n=len(workloads))
+toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+
+toolbox.register("evaluate", calculate_fitness)
+
+# Custom mutation function to ensure valid cluster assignments
 def mutate_individual(individual):
     for i in range(len(individual)):
         if random.random() < 0.2:  # Mutation probability
@@ -78,40 +86,13 @@ def mutate_individual(individual):
             individual[i] = random.choice(list(clusters.keys()))
     return individual,
 
-# clusters = {
-#       "A": {"GPUs": 2, "CO2": 10},
-#       "B": {"GPUs": 2, "CO2": 100},
-#   }
+toolbox.register("mutate", mutate_individual)
 
-def generate_clusters(timestep, edge_clusters):
-    clusters = {}
-    for edge_cluster in edge_clusters:
-        clusters[edge_cluster.name] = edge_cluster
-    return clusters
-
+toolbox.register("mate", tools.cxUniform, indpb=0.5)
+toolbox.register("select", tools.selTournament, tournsize=3)
 
 # Main GA Process
 def main():
-    # edge_clusters = []
-    # edge_cluster = EdgeCluster("lulea", 1, 2, "../../carbon_1s_30d/SE-SE1.csv", 0.001101, 1.0, "./test_output/umea.csv")
-    # edge_clusters.append(edge_cluster)
-    # edge_cluster = EdgeCluster("warsaw", 1, 2, "../../carbon_1s_30d/PL.csv", 0.001101, 1.0, "./test_output/umea.csv")
-    # edge_clusters.append(edge_cluster)
-
-
-    workloads = generate_workload_pool([1, 20, 3, 4, 400])
-
-    creator.create("FitnessMax", base.Fitness, weights=(1.0,))
-    creator.create("Individual", list, fitness=creator.FitnessMax)
-    toolbox = base.Toolbox()
-    toolbox.register("attr_cluster", lambda: random.choice(list(clusters.keys())))
-    toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.attr_cluster, n=len(workloads))
-    toolbox.register("population", tools.initRepeat, list, toolbox.individual)
-    toolbox.register("evaluate", calculate_fitness, workloads=workloads, clusters=clusters)
-    toolbox.register("mutate", mutate_individual)
-    toolbox.register("mate", tools.cxUniform, indpb=0.5)
-    toolbox.register("select", tools.selTournament, tournsize=3)
-
     #random.seed(42)
     random.seed(random.randint(0, 1000))
     population = toolbox.population(n=50)
@@ -134,9 +115,6 @@ def main():
         verbose=True,
     )
 
-    print("===========================")
-    for workload in workloads:
-        print(workload)
     # Output Best Result
     best_individual = tools.selBest(population, k=1)[0]
     print("Best Schedule:", best_individual)

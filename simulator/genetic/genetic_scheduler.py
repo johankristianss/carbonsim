@@ -4,16 +4,34 @@ import sys
 sys.path.append('/home/johan/dev/github/johankristianss/carbonsim/simulator')
 from stats import get_process_power_draw_stat
 
-class GeneticPool:
-    def __init__(self, clusters, workload_stats_dir):
-        self.clusters = clusters
+class GeneticScheduler:
+    def __init__(self, workload_stats_dir):
+        self.clusters = {} 
         self.workload_stats_dir = workload_stats_dir
         self.toolbox = base.Toolbox()
         self.stats = None
         self.workloads = []
         self.workloads_indices = []
+        
+        creator.create("FitnessMax", base.Fitness, weights=(1.0,))
+        creator.create("Individual", list, fitness=creator.FitnessMax)
 
-    def add_workloads(self, workload_indices):
+    def set_clusters_status(self, edgeclusters):
+        self.clusters = {}
+        for edgecluster in edgeclusters:
+            self.clusters[edgecluster.name] = {
+                "GPUs": edgecluster.gpus,
+                "CO2": edgecluster.carbon_intensity
+            }
+
+    def set_clusters_status_raw(self, clusters):
+        self.clusters = clusters
+
+    def print_clusters(self):
+        for cluster in self.clusters:
+            print(cluster, self.clusters[cluster])  
+
+    def set_workloads(self, workload_indices):
         self.workloads = []
         for idx in workload_indices:
             power_draw_mean, _, _, duration = get_process_power_draw_stat(self.workload_stats_dir, idx)
@@ -23,8 +41,6 @@ class GeneticPool:
                 "duration": duration,
                 "deadline": 0
             })
-        self.workloads[0]["deadline"] = 100
-        self.workloads[0]["power"] = 3
         return self.workloads
 
     def print_workloads(self):
@@ -38,14 +54,21 @@ class GeneticPool:
         energy_penalty = 0
         deadline_penalty = 0
 
-        print("Schedule:", schedule)
+        # print("Schedule:", schedule)
+        
         for workload, cluster in zip(self.workloads, schedule):
-            #print(workload["id"], cluster)
+            if cluster == "wait":
+                if workload["deadline"] <= 0:
+                   deadline_penalty += 1000
+                elif workload["deadline"] > 0: # and workload["power"] > 120:
+                    # find the lowest co2 intensity cluster in all available clusters
+                    lowest_co2_intensity = 0
+                    for cluster in self.clusters:
+                        if gpu_availability[cluster] > 0:
+                            if lowest_co2_intensity == 0 or self.clusters[cluster]["CO2"] < lowest_co2_intensity:
+                                lowest_co2_intensity = self.clusters[cluster]["CO2"]
 
-            if cluster == "wait": # Should we wait deploying this workload?
-                # if workload["deadline"] <= 0: # If deadline is positive, we should wait
-                #     deadline_penalty += 1000 # 350 - workload["power"] # 10000 # workload["power"]
-                deadline_penalty += (200-workload["deadline"]) * workload["power"] 
+                    deadline_penalty += workload["power"] # * lowest_co2_intensity / 2
                 continue
 
             if gpu_availability[cluster] <= 0:
@@ -58,9 +81,6 @@ class GeneticPool:
             emission = co2_intensity * power
             energy_penalty += emission
 
-            # if workload["deadline"] < 0:
-            #     deadline_penalty += abs(workload["deadline"]) * 100
-
         min_energy_penalty = 0
         max_energy_penalty = 350 * 1000
 
@@ -68,8 +88,6 @@ class GeneticPool:
             normalized_energy_penalty = (energy_penalty - min_energy_penalty) / (max_energy_penalty - min_energy_penalty) * 9999
         else:
             normalized_energy_penalty = 0
-
-        print("DEADLINE PENALTY:", deadline_penalty)
 
         penalty += normalized_energy_penalty
         penalty += deadline_penalty
@@ -80,15 +98,11 @@ class GeneticPool:
         for i in range(len(individual)):
             if random.random() < 0.2:
                 #individual[i] = random.choice(list(self.clusters.keys()))
-                individual[i] = random.choice(list(clusters.keys()) + ["wait"])
+                individual[i] = random.choice(list(self.clusters.keys()) + ["wait"])
         return individual,
 
     def initialize_deap(self):
-        creator.create("FitnessMax", base.Fitness, weights=(1.0,))
-        creator.create("Individual", list, fitness=creator.FitnessMax)
-
-        #self.toolbox.register("attr_cluster", lambda: random.choice(list(self.clusters.keys())))
-        self.toolbox.register("attr_cluster", lambda: random.choice(list(clusters.keys()) + ["wait"]))
+        self.toolbox.register("attr_cluster", lambda: random.choice(list(self.clusters.keys()) + ["wait"]))
         self.toolbox.register("individual", tools.initRepeat, creator.Individual, self.toolbox.attr_cluster, n=len(self.workloads))
         self.toolbox.register("population", tools.initRepeat, list, self.toolbox.individual)
         self.toolbox.register("evaluate", self.calculate_fitness)
@@ -104,27 +118,13 @@ class GeneticPool:
     def run(self, generations=500, population_size=50):
         self.initialize_deap()
         population = self.toolbox.population(n=population_size)
-        return algorithms.eaSimple(population, self.toolbox, cxpb=0.7, mutpb=0.2, ngen=generations,
+        population, _ = algorithms.eaSimple(population, self.toolbox, cxpb=0.7, mutpb=0.2, ngen=generations,
                                    stats=self.stats, verbose=False)
 
-# Example usage:
-if __name__ == "__main__":
-    clusters = {
-        "A": {"GPUs": 2, "CO2": 10},
-        "B": {"GPUs": 3, "CO2": 100},
-    }
-    workload_stats_dir = "../../filtered_workloads_1s_stats"
-    workload_indices = [1, 20, 3, 4, 400]
+        best_individual = tools.selBest(population, k=1)[0]
 
-    gp = GeneticPool(clusters, workload_stats_dir)
-    gp.add_workloads(workload_indices)
-    population, _ = gp.run()
- 
-    print("==================================== INPUTS ====================================")
-    print("Workloads:")
-    gp.print_workloads()
+        schedule = {}
+        for workload, cluster in zip(self.workloads, best_individual):
+            schedule[workload["id"]] = cluster
 
-    print("==================================== RESULTS ====================================")
-    best_individual = tools.selBest(population, k=1)[0]
-    print("Best Schedule:", best_individual)
-    print("Best Fitness:", best_individual.fitness.values[0])
+        return schedule, best_individual.fitness.values[0]

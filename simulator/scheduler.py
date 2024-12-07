@@ -4,7 +4,9 @@ from stats import get_process_power_draw_stat
 from pool import ProcessPool
 from timepool import ProcessTimePool
 import os
-from copy import deepcopy
+import sys
+sys.path.append('/home/johan/dev/github/johankristianss/carbonsim/simulator/genetic')
+from genetic_timepool import GeneticTimePool
 
 class Scheduler:
     def __init__(self, csv_filename='./scheduler.csv', workloads_stats_dir='./filtered_workloads_1s_stats', alg='random', timepool_power_threshold=150, pool_size=50, pool_alg="mean"):
@@ -18,6 +20,8 @@ class Scheduler:
         self.__alg = alg
         self.__pool = ProcessPool(pool_size=pool_size, pool_alg=pool_alg)
         self.__timepool = ProcessTimePool(power_threshold=timepool_power_threshold)
+        self.__genetic_timepool = GeneticTimePool(workloads_stats_dir)
+
         self.average_utilization_sum = 0
 
     def add_edge_cluster(self, edge_cluster):
@@ -165,16 +169,16 @@ class Scheduler:
         if self.__alg == 'timepool':
             print("----------------------- time pool scheduling -----------------------")
             if self.__timepool.add_process(process) == False:
-                print("pool.add_process failed")
+                print("timepool.add_process failed")
                 return False
           
             selected_processes = self.__timepool.select_processes()
             if selected_processes is None:
-                print("selected_processes is None")
+                print("timepool, selected_processes is None")
                 return True # processes are queued in the pool, but don't need to run now 
 
             if len(selected_processes) == 0:
-                print("selected_processes is empty")
+                print("timepool, selected_processes is empty")
                 return True  # processes are queued in the pool, but don't need to run now
 
             for selected_process in selected_processes:
@@ -186,8 +190,39 @@ class Scheduler:
                 selected_edge_cluster = available_edge_clusters[0]
                 if selected_edge_cluster.run(selected_process):
                     self.__timepool.remove_process(selected_process.name)
-
             return True
+
+        if self.__alg == 'genetic_timepool':
+            print("----------------------- genetic time pool scheduling -----------------------")
+            if self.__genetic_timepool.add_process(process) == False:
+                print("genetic_timepool.add_process failed")
+                return False
+         
+            # convert edge clusters dict to an array
+            edge_clusters = list(self.__edge_clusters_dict.values())
+
+            schedule = self.__genetic_timepool.calc_schedule(edge_clusters)
+            print("schedule: ", schedule)
+            if schedule is None:
+                print("genetic_timepool, schedule is None")
+                return True # processes are queued in the pool, but don't need to run now 
+
+            if len(schedule) == 0:
+                print("genetic_timepool, schedule is empty")
+                return True  # processes are queued in the pool, but don't need to run now
+
+            for process_idx, edge_cluster_name in schedule.items():
+                print("process_idx: ", process_idx)
+                print("edge_cluster_name: ", edge_cluster_name)
+                if edge_cluster_name == 'wait':
+                    continue
+                edge_cluster = self.__edge_clusters_dict[edge_cluster_name]
+                process = self.__genetic_timepool.get_process(process_idx)
+                print("selected process: ", process.name)
+                if edge_cluster.run(process):
+                    self.__genetic_timepool.remove_process(process_idx)
+            return True
+
         if self.__alg == 'pool':
             print("----------------------- pool scheduling -----------------------")
             if self.__pool.is_full():
@@ -195,8 +230,8 @@ class Scheduler:
             if self.__pool.add_process(process) == False:
                 print("pool.add_process failed")
                 return False
-            
             return True
+
         elif self.__alg == 'lookahead':
             print("----------------------- lookahead scheduling -----------------------")
             ############# lookahead scheduling ############
@@ -216,6 +251,7 @@ class Scheduler:
                 return False
             print("selected best edge cluster: ", selected_edge_cluster.name)
             return selected_edge_cluster.run(process)
+
         elif self.__alg == 'greedy':
             print("----------------------- greedy scheduling -----------------------")
             ############# greedy scheduling ############
@@ -226,6 +262,7 @@ class Scheduler:
 
             selected_edge_cluster = available_edge_clusters[0]
             return selected_edge_cluster.run(process)
+
         elif self.__alg == 'random':
             print("-----------------------  random scheduling -----------------------")
             ############# random scheduling ############
