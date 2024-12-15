@@ -67,12 +67,15 @@ class EdgeCluster:
 
 
     def run(self, process):
-        self.__total_processes += 1
-        if self.utilization > self.__utilization_threshold:
-            return False
+        #if self.utilization > self.__utilization_threshold:
+           # print(f'EdgeCluster <{self.__name}> is at full capacity due to throttling, rejecting process <{process.name}>')
+        #    return False
         if self.available:
+            self.__total_processes += 1
             self.__processes.append(process)
             return True
+        #else:
+        #    print(f'EdgeCluster <{self.__name}> is at full capacity, rejecting process <{process.name}>')
         
         return False
 
@@ -187,6 +190,10 @@ class EdgeCluster:
     @property
     def available(self):
         return self.__gpus - len(self.__processes) > 0
+    
+    @property
+    def available_gpus(self):
+        return self.__gpus - len(self.__processes)
 
     @property
     def utilization(self):

@@ -30,7 +30,6 @@ class ProcessTimePool:
 
         # find all process where deadline is less or equal to 0
         for process in self.pool:
-            process.decrease_deadline()
             if process.deadline <= 0:
                 selected_processes.append(process)
        
@@ -45,3 +44,7 @@ class ProcessTimePool:
         #     print(process.name, process.power_draw_mean, process.deadline)
 
         return selected_processes
+
+    def tick(self):
+        for process in self.pool:
+            process.decrease_deadline()

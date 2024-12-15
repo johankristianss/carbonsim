@@ -10,14 +10,14 @@ workload_dir = "./filtered_workloads_1s"
 workloads_stats_dir = "./filtered_workloads_1s_stats"
 cluster_config = "./edge-clusters-small.json"
 log_dir = "./logs/30"
-log_file = "log_0.csv"
+log_file = "log_2.csv"
 
 alg = "random"
 results_dir = "./results/30/random"
 timepool_power_threshold = 150 # watts
 timepool_process_maxwait = 60 * 2 # seconds
 pool_size = 50
-pool_alg = "mean"
+pool_alg = "energy"
 
 def main():
     simulator = Simulator(alg,

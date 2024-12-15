@@ -10,11 +10,11 @@ workload_dir = "./filtered_workloads_1s"
 workloads_stats_dir = "./filtered_workloads_1s_stats"
 cluster_config = "./edge-clusters-small.json"
 log_dir = "./logs/30"
-log_file = "log_0.csv"
+log_file = "log_2.csv"
 
 alg = "timepool"
 results_dir = "./results/30/timepool"
-timepool_power_threshold = 150 # watts
+timepool_power_threshold = 100 # watts
 timepool_process_maxwait = 60 * 2 # seconds
 pool_size = 50
 pool_alg = "mean"

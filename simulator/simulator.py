@@ -132,10 +132,6 @@ class Simulator:
             tick = 0
             process_counter = 0
             for idx, csv_dict in enumerate(csv_arr):
-                scan_size = 10 
-                end_idx = min(idx + scan_size, len(csv_arr))
-                next_elements = csv_arr[idx:end_idx]
-                next_process_filenames = [csv_dict["csv_file"] for csv_dict in next_elements]
 
                 csv_file = csv_dict["csv_file"]
                 ticks_to_wait = csv_dict["ticks_to_wait"]
@@ -155,11 +151,11 @@ class Simulator:
                             break
                     break
                 process = Process(f"test_process_{idx}", idx, 0, self.__timepool_process_maxwait, os.path.join(self.__workload_dir, csv_file), self.__workloads_stats_dir)
-                ok = self.scheduler.run(process, next_process_filenames)
+                ok = self.scheduler.run(process)
                 if not ok:
                     # tick until an edge-cluster is available
                     print("waiting for a cluster to become available, tick: ", tick)
-                    while not self.scheduler.run(process, next_process_filenames):
+                    while not self.scheduler.run(process):
                         self.scheduler.tick()
                         tick += 1
                         if self.should_finish(tick):
@@ -187,7 +183,8 @@ class Simulator:
         print("Total GPU energy [kWh]: ", self.scheduler.cumulative_energy)
         print("Total GPU cost [Euro]: ", self.scheduler.total_gpu_cost)
         print("Total process added: ", process_counter)
-        print("Total scheduled processes: ", self.scheduler.total_processes)
+        print("Total scheduled processes: ", self.scheduler.scheduled_processes)
+        print("Total run processes: ", self.scheduler.total_processes)
         print("Total finished processes: ", self.scheduler.finished_processes)
         print("Scheduler Pool Size:", self.scheduler.pool_size)
         print("Total processing time [h]: ", self.scheduler.total_processing_time/60/60)

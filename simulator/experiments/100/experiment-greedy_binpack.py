@@ -9,13 +9,13 @@ cluster_utilization_threshold = 1.0
 workload_dir = "./filtered_workloads_1s"
 workloads_stats_dir = "./filtered_workloads_1s_stats"
 cluster_config = "./edge-clusters-small.json"
-log_dir = "./logs/30"
+log_dir = "./logs/100"
 log_file = "log_2.csv"
 
-alg = "greedy"
-results_dir = "./results/30/greedy"
-timepool_power_threshold = 150 # watts
-timepool_process_maxwait = 60 * 2 # seconds
+alg = "greedy_binpack"
+results_dir = "./results/100/greedy_binpack"
+timepool_power_threshold = 70 # watts
+timepool_process_maxwait = 60 * 60 * 24 # 24 hours
 pool_size = 50
 pool_alg = "mean"
 

@@ -20,7 +20,7 @@ class GeneticScheduler:
         self.clusters = {}
         for edgecluster in edgeclusters:
             self.clusters[edgecluster.name] = {
-                "GPUs": edgecluster.gpus,
+                "GPUs": edgecluster.available_gpus,
                 "CO2": edgecluster.carbon_intensity
             }
 
@@ -34,12 +34,26 @@ class GeneticScheduler:
     def set_workloads(self, workload_indices):
         self.workloads = []
         for idx in workload_indices:
-            power_draw_mean, _, _, duration = get_process_power_draw_stat(self.workload_stats_dir, idx)
+            power_draw_mean, power_draw_median, total_power_consumption, duration = get_process_power_draw_stat(self.workload_stats_dir, idx)
             self.workloads.append({
                 "id": idx,
                 "power": power_draw_mean,
+                "energy": total_power_consumption,
                 "duration": duration,
-                "deadline": 0
+                "deadline": 0,
+            })
+        return self.workloads
+    
+    def set_workloads_processes(self, processes):
+        self.workloads = []
+        for process in processes:
+            power_draw_mean, power_draw_median, total_power_consumption, duration = get_process_power_draw_stat(self.workload_stats_dir, process.idx)
+            self.workloads.append({
+                "id": process.idx,
+                "power": power_draw_mean,
+                "energy": total_power_consumption,
+                "duration": duration,
+                "deadline": process.deadline,
             })
         return self.workloads
 
@@ -59,14 +73,14 @@ class GeneticScheduler:
         for workload, cluster in zip(self.workloads, schedule):
             if cluster == "wait":
                 if workload["deadline"] <= 0:
-                   deadline_penalty += 1000
-                elif workload["deadline"] > 0: # and workload["power"] > 120:
+                   deadline_penalty += 1000000
+                elif workload["deadline"] > 0 and workload["power"] > 100:
                     # find the lowest co2 intensity cluster in all available clusters
-                    lowest_co2_intensity = 0
-                    for cluster in self.clusters:
-                        if gpu_availability[cluster] > 0:
-                            if lowest_co2_intensity == 0 or self.clusters[cluster]["CO2"] < lowest_co2_intensity:
-                                lowest_co2_intensity = self.clusters[cluster]["CO2"]
+                    # lowest_co2_intensity = 0
+                    # for cluster in self.clusters:
+                    #     if gpu_availability[cluster] > 0:
+                    #         if lowest_co2_intensity == 0 or self.clusters[cluster]["CO2"] < lowest_co2_intensity:
+                    #             lowest_co2_intensity = self.clusters[cluster]["CO2"]
 
                     deadline_penalty += workload["power"] # * lowest_co2_intensity / 2
                 continue
@@ -79,6 +93,7 @@ class GeneticScheduler:
             co2_intensity = self.clusters[cluster]["CO2"]
             power = workload["power"]
             emission = co2_intensity * power
+            #emission = co2_intensity * workload["energy"]
             energy_penalty += emission
 
         min_energy_penalty = 0
@@ -124,6 +139,7 @@ class GeneticScheduler:
         best_individual = tools.selBest(population, k=1)[0]
 
         schedule = {}
+
         for workload, cluster in zip(self.workloads, best_individual):
             schedule[workload["id"]] = cluster
 

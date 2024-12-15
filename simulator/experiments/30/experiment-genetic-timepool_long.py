@@ -9,13 +9,13 @@ cluster_utilization_threshold = 1.0
 workload_dir = "./filtered_workloads_1s"
 workloads_stats_dir = "./filtered_workloads_1s_stats"
 cluster_config = "./edge-clusters-small.json"
-log_dir = "./logs/60"
-log_file = "log_1.csv"
+log_dir = "./logs/30"
+log_file = "log_2.csv"
 
-alg = "lookahead"
-results_dir = "./results/60/lookahead"
+alg = "genetic_timepool"
+results_dir = "./results/30/genetic_timepool_long"
 timepool_power_threshold = 150 # watts
-timepool_process_maxwait = 60 * 2 # seconds
+timepool_process_maxwait = 60 * 30 # 30 minutes
 pool_size = 50
 pool_alg = "mean"
 

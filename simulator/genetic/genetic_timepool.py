@@ -30,13 +30,15 @@ class GeneticTimePool:
             return None
     
         self.gs.set_clusters_status(edge_clusters)
+    
+        # convert the pool to a list of process list
+        process_list = list(self.pool.values())
 
-        workload_indices = []
-        for process in self.pool.values():
-            workload_indices.append(process.idx)
-
-        self.gs.set_workloads(workload_indices)
+        self.gs.set_workloads_processes(process_list)
 
         best_schedule, _ = self.gs.run()
         return best_schedule
 
+    def tick(self):
+        for process in self.pool.values():
+            process.decrease_deadline()
