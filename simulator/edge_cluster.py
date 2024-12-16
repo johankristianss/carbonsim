@@ -146,6 +146,9 @@ class EdgeCluster:
     def carbon_intensity(self):
         return self.__carbon_intensity_dict.get(self.__timestep, 0.0)
 
+    def carbon_intensity_future(self, seconds):
+        return self.__carbon_intensity_dict.get(self.__timestep + seconds, 0.0)
+
     @property
     def num_running_processes(self):
         return len(self.__processes)

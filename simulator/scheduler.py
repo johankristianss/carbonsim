@@ -8,6 +8,9 @@ import sys
 sys.path.append('/home/johan/dev/github/johankristianss/carbonsim/simulator/genetic')
 from genetic_timepool import GeneticTimePool
 from greedy_binpack_pool import GreedyBinpackPool
+from delay_pool import DelayPool
+import pandas as pd
+import math
 
 class Scheduler:
     def __init__(self, csv_filename='./scheduler.csv', workloads_stats_dir='./filtered_workloads_1s_stats', alg='random', timepool_power_threshold=150, pool_size=50, pool_alg="mean"):
@@ -24,7 +27,7 @@ class Scheduler:
         self.__genetic_timepool = GeneticTimePool(workloads_stats_dir)
         self.__timepool_power_threshold = timepool_power_threshold
         self.__greedy_binpack_pool = GreedyBinpackPool(power_threshold=self.__timepool_power_threshold)
-        self.__best_edge_cluster_first = False
+        self.__delay_pool = DelayPool()
 
         self.average_utilization_sum = 0
         self.__scheduled_processs = 0
@@ -125,6 +128,106 @@ class Scheduler:
                 # print pool size left after scheduling
             print("process not scheduled: ")
             self.__greedy_binpack_pool.print_pool()
+        
+        if self.__alg == 'delay':
+            selected_processes, must_run_processes = self.__delay_pool.select_processes()
+            self.__delay_pool.print_pool()
+
+            # these processes must run now immediately
+            for process in must_run_processes:
+                available_edge_clusters = [edge_cluster for edge_cluster in self.__edge_clusters_dict.values() if edge_cluster.available]
+
+                if len(available_edge_clusters) > 0:
+                    available_edge_clusters.sort(key=lambda edge_cluster: edge_cluster.carbon_intensity)
+                    selected_edge_cluster = available_edge_clusters[0]
+                    print("selected edge cluster: ", selected_edge_cluster.name)
+                    if selected_edge_cluster.run(process):
+                        self.__delay_pool.remove_process(process.name)
+
+            # these processes can be delayed
+            for process in selected_processes:
+                available_edge_clusters = [edge_cluster for edge_cluster in self.__edge_clusters_dict.values() if edge_cluster.available]
+                available_edge_clusters_future = [edge_cluster for edge_cluster in self.__edge_clusters_dict.values() if edge_cluster.available]
+
+                if len(available_edge_clusters) > 0 and len(available_edge_clusters_future) > 0:
+                    available_edge_clusters.sort(key=lambda edge_cluster: edge_cluster.carbon_intensity)
+                    available_edge_clusters_future.sort(key=lambda edge_cluster: edge_cluster.carbon_intensity_future(60*60)) # next 1h
+                    selected_edge_cluster = available_edge_clusters[0]
+                    selected_edge_cluster_future = available_edge_clusters_future[0]
+
+                    print("selected edge cluster now: ", selected_edge_cluster.name, "carbon_intensity: ", selected_edge_cluster.carbon_intensity)
+                    print("selected edge cluster next 1h: ", selected_edge_cluster_future.name, "carbon_intensity: ", selected_edge_cluster_future.carbon_intensity)
+
+                    # delay the process if the carbon intensity is lower in the future
+                    if selected_edge_cluster.carbon_intensity <= selected_edge_cluster_future.carbon_intensity_future(60*60):
+                        if selected_edge_cluster.run(process):
+                            self.__delay_pool.remove_process(process.name)
+                    else:
+                        print("DELAYING process: ", process.name)
+
+                    # the problem with this algorithm is that we may postpone a lare number of processes
+                    # and we may not have enough edge clusters to run them, leading hem to run on a non-optimal cluster
+                    # another problem is that the carbon intensity may be lower beyond one hour, but then increase 
+                    # se we miss the global optimium
+        
+        if self.__alg == 'delay_v2':
+            selected_processes, must_run_processes = self.__delay_pool.select_processes()
+            #self.__delay_pool.print_pool()
+
+            # these processes must run now immediately
+            for process in must_run_processes:
+                available_edge_clusters = [edge_cluster for edge_cluster in self.__edge_clusters_dict.values() if edge_cluster.available]
+
+                if len(available_edge_clusters) > 0:
+                    available_edge_clusters.sort(key=lambda edge_cluster: edge_cluster.carbon_intensity)
+                    selected_edge_cluster = available_edge_clusters[0]
+                    print("selected edge cluster: ", selected_edge_cluster.name)
+                    if selected_edge_cluster.run(process):
+                        self.__delay_pool.remove_process(process.name)
+
+            for process in selected_processes:
+                if process.power_draw_mean > self.__timepool_power_threshold:
+                     clusters = self.__edge_clusters_dict
+                     deadline_hours = math.ceil(process.deadline / 3600)
+                     forecast_hours = range(0, deadline_hours)
+                     #print("forecast_hours: ", forecast_hours)
+         
+                     forecast_data = {}
+                     for cluster_name, cluster_obj in clusters.items():
+                         hourly_values = []
+                         for hour in forecast_hours:
+                             future_seconds = hour * 3600
+                             intensity = cluster_obj.carbon_intensity_future(future_seconds)
+                             hourly_values.append(intensity)
+                             forecast_data[cluster_name] = hourly_values
+         
+                     df = pd.DataFrame.from_dict(forecast_data, 
+                             orient='index', 
+                             columns=[f'H+{h}' for h in forecast_hours])
+                     #df = pd.DataFrame.from_dict(forecast_data, orient='index', columns=[f'H+{h}' for h in forecast_hours])
+                     best_hour = df.min().idxmin()
+                     #print(df)
+                     #print("best_hour: ", best_hour)
+     
+                     if best_hour == 'H+0':
+                         print("XXXXXXXXXXXXXXXXXXX Optimal time to run process: now")
+                         available_edge_clusters = [edge_cluster for edge_cluster in self.__edge_clusters_dict.values() if edge_cluster.available]                          
+                         if len(available_edge_clusters) < 1:
+                             process.deadline = -1
+                         else:
+                            available_edge_clusters.sort(key=lambda edge_cluster: edge_cluster.carbon_intensity)
+                            selected_edge_cluster = available_edge_clusters[0]
+     
+                            if selected_edge_cluster.run(process):
+                                self.__delay_pool.remove_process(process.name)
+                else:
+                    available_edge_clusters = [edge_cluster for edge_cluster in self.__edge_clusters_dict.values() if edge_cluster.available]
+                    if len(available_edge_clusters) > 0:
+                        available_edge_clusters.sort(key=lambda edge_cluster: edge_cluster.carbon_intensity)
+                        selected_edge_cluster = available_edge_clusters[0]
+     
+                        if selected_edge_cluster.run(process):
+                            self.__delay_pool.remove_process(process.name)
 
         if self.__alg == 'genetic_timepool':
             edge_clusters = list(self.__edge_clusters_dict.values())
@@ -202,6 +305,20 @@ class Scheduler:
             self.__greedy_binpack_pool.add_process(process)
             self.__scheduled_processs += 1
             return True
+        
+        elif self.__alg == 'delay':
+            print("----------------------- delay scheduling -----------------------")
+            ############# greedy bin packing scheduling ############
+            self.__delay_pool.add_process(process)
+            self.__scheduled_processs += 1
+            return True
+        
+        elif self.__alg == 'delay_v2':
+            print("----------------------- delay scheduling -----------------------")
+            ############# greedy bin packing scheduling ############
+            self.__delay_pool.add_process(process)
+            self.__scheduled_processs += 1
+            return True
 
         elif self.__alg == 'random':
             print("-----------------------  random scheduling -----------------------")
@@ -242,6 +359,7 @@ class Scheduler:
         self.__genetic_timepool.tick()
         self.__timepool.tick()
         self.__greedy_binpack_pool.tick()
+        self.__delay_pool.tick()
 
     @property
     def num_edge_clusters(self):

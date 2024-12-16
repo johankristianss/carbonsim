@@ -132,6 +132,11 @@ class Process:
     def deadline(self):
         return self.__deadline
 
+    # setter for deadline
+    @deadline.setter
+    def deadline(self, value):
+        self.__deadline = value
+
     @property
     def total_length_seconds(self):
         return self.__total_length_seconds

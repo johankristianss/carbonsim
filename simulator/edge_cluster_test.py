@@ -20,6 +20,8 @@ class TestEdgeCluster(unittest.TestCase):
         print("process: carbon emission [g]: ", process.cumulative_emission)
         print("process: energy [kWh]: ", process.cumulative_energy)
         print("process: timesteps: ", process.timestep)
+        print("carbon intensity: ", edge_cluster.carbon_intensity)
+        print("future carbon intensity: ", edge_cluster.carbon_intensity_next_1h)
 
 if __name__ == '__main__':
     unittest.main()
