@@ -10,6 +10,7 @@ class Simulator:
                  alg,
                  power_threshold,
                  process_maxwait,
+                 co2_intensity_threshold,
                  max_processes,
                  max_days,
                  cluster_utilization_threshold,
@@ -30,13 +31,14 @@ class Simulator:
         self.__alg = alg
         self.__power_threshold = power_threshold
         self.__process_maxwait = process_maxwait
+        self.__co2_intensity_threshold = co2_intensity_threshold
 
         self.result_dir = result_dir
         if not os.path.exists(self.result_dir):
             print("creating result dir: ", self.result_dir)
             os.makedirs(self.result_dir)
-        
-        self.scheduler = Scheduler(csv_filename=result_dir + "/scheduler.csv", alg=self.__alg, power_threshold=self.__power_threshold)
+       
+        self.scheduler = Scheduler(csv_filename=result_dir + "/scheduler.csv", alg=self.__alg, power_threshold=self.__power_threshold, co2_intensity_threshold=self.__co2_intensity_threshold)
 
     def should_finish(self, tick):
         return tick > self.__max_days*24*60*60

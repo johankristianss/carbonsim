@@ -11,7 +11,7 @@ import pandas as pd
 import math
 
 class Scheduler:
-    def __init__(self, csv_filename='./scheduler.csv', workloads_stats_dir='./filtered_workloads_1s_stats', alg='random', power_threshold=150):
+    def __init__(self, csv_filename='./scheduler.csv', workloads_stats_dir='./filtered_workloads_1s_stats', alg='random', power_threshold=150, co2_intensity_threshold=20):
         self.__edge_clusters_dict = {}
         self.tick_count = 0
         self.csv_filename = csv_filename
@@ -19,6 +19,7 @@ class Scheduler:
         self.writer = csv.DictWriter(self.csvfile, fieldnames=['tick', 'cumulative_emission', 'cumulative_energy', 'utilization', 'total_gpu_cost'])
         self.writer.writeheader()
         self.workloads_stats_dir = workloads_stats_dir
+        self.__c02_intensity_threshold = co2_intensity_threshold
         self.__alg = alg
         self.__genetic_pool = GeneticPool(workloads_stats_dir)
         self.__power_threshold = power_threshold
@@ -39,11 +40,11 @@ class Scheduler:
             self.__greedy_binpack_pool.print_pool()
 
             print("------------------------------- greedy_binpack background -------------------------------")
-            print("high_effect_processes: ", len(high_effect_processes))
-            print("low_effect_processes: ", len(low_effect_processes))
-            print("must_run_processes: ", len(must_run_processes))
-
-            print("processing must run processes")
+            # print("high_effect_processes: ", len(high_effect_processes))
+            # print("low_effect_processes: ", len(low_effect_processes))
+            # print("must_run_processes: ", len(must_run_processes))
+            #
+            # print("processing must run processes")
             for process in must_run_processes:
                 available_edge_clusters = [edge_cluster for edge_cluster in self.__edge_clusters_dict.values() if edge_cluster.available]
 
@@ -54,10 +55,9 @@ class Scheduler:
                     if selected_edge_cluster.run(process):
                         self.__greedy_binpack_pool.remove_process(process.name)
 
-            print("processing high energy processes")
             for process in high_effect_processes:
                 available_edge_clusters = [edge_cluster for edge_cluster in self.__edge_clusters_dict.values() if edge_cluster.available]
-                available_edge_clusters = [c for c in available_edge_clusters if c.carbon_intensity <= 150]
+                available_edge_clusters = [c for c in available_edge_clusters if c.carbon_intensity <= self.__c02_intensity_threshold]
                 if len(available_edge_clusters) > 0:
                     available_edge_clusters.sort(key=lambda edge_cluster: edge_cluster.carbon_intensity)
                     selected_edge_cluster = available_edge_clusters[0]
@@ -99,7 +99,6 @@ class Scheduler:
                     if selected_edge_cluster.run(process):
                         self.__delay_pool.remove_process(process.name)
 
-            print("process queue: ")
             for process in selected_processes:
                 if process.power_draw_mean > self.__power_threshold:
                      clusters = self.__edge_clusters_dict

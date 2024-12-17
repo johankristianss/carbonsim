@@ -13,14 +13,16 @@ log_dir = "./logs/60"
 log_file = "log_2.csv"
 
 alg = "genetic_timepool"
-results_dir = "./results/60/genetic_timepool"
+results_dir = "./results/100_single/genetic_timepool"
 power_threshold = 150 # watts
 process_maxwait = 60 * 2 # seconds
+co2_intensity_threshold = 160
 
 def main():
     simulator = Simulator(alg,
                           power_threshold,
                           process_maxwait,
+                          co2_intensity_threshold,
                           max_processes,
                           max_days,
                           cluster_utilization_threshold,

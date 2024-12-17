@@ -16,11 +16,13 @@ alg = "greedy"
 results_dir = "./results/100_single/greedy"
 power_threshold = 150 # watts
 process_maxwait = 60 * 2 # seconds
+co2_intensity_threshold = 160
 
 def main():
     simulator = Simulator(alg,
                           power_threshold,
                           process_maxwait,
+                          co2_intensity_threshold,
                           max_processes,
                           max_days,
                           cluster_utilization_threshold, 

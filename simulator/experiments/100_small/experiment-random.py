@@ -9,22 +9,20 @@ cluster_utilization_threshold = 1.0
 workload_dir = "./filtered_workloads_1s"
 workloads_stats_dir = "./filtered_workloads_1s_stats"
 cluster_config = "./edge-clusters-small.json"
-log_dir = "./logs/30"
+log_dir = "./logs/100"
 log_file = "log_2.csv"
 
-alg = "genetic_timepool"
-results_dir = "./results/30/genetic_timepool_long"
-timepool_power_threshold = 150 # watts
-timepool_process_maxwait = 60 * 30 # 30 minutes
-pool_size = 50
-pool_alg = "mean"
+alg = "random"
+results_dir = "./results/100/random_small"
+power_threshold = 150 # watts
+process_maxwait = 60 * 2 # seconds
+co2_intensity_threshold = 20 
 
 def main():
     simulator = Simulator(alg,
-                          timepool_power_threshold,
-                          timepool_process_maxwait,
-                          pool_size,
-                          pool_alg,
+                          power_threshold,
+                          process_maxwait,
+                          co2_intensity_threshold,
                           max_processes,
                           max_days,
                           cluster_utilization_threshold,
