@@ -68,7 +68,7 @@ class GeneticScheduler:
         energy_penalty = 0
         deadline_penalty = 0
 
-        # print("Schedule:", schedule)
+        print("Schedule:", schedule)
         
         for workload, cluster in zip(self.workloads, schedule):
             if cluster == "wait":
