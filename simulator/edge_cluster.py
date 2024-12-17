@@ -224,29 +224,29 @@ class EdgeCluster:
     def current_carbon_intensity(self):
         return self.__carbon_intensity_dict.get(self.__timestep, 0.0)
 
-    def __deepcopy__(self, memo):
-        """
-        Custom deepcopy implementation to avoid copying non-serializable attributes.
-        """
-        # Create an empty instance of EdgeCluster
-        copied = EdgeCluster.empty()
-    
-        # Copy serializable attributes
-        copied.__name = self.__name
-        copied.__nodes = self.__nodes
-        copied.__gpu_per_node = self.__gpu_per_node
-        copied.__carbon_csv_file = self.__carbon_csv_file
-        #copied.__carbon_intensity_dict = copy.deepcopy(self.__carbon_intensity_dict, memo)
-        copied.__gpus = self.__gpus
-        copied.__timestep = self.__timestep
-        #copied.__processes = copy.deepcopy(self.__processes, memo)
-        copied.__cumulative_energy = self.__cumulative_energy
-        copied.__cumulative_emission = self.__cumulative_emission
-        copied.__gpu_cost = self.__gpu_cost
-        copied.__total_gpu_cost = self.__total_gpu_cost
-        copied.__total_processing_time = self.__total_processing_time
-        copied.__finsihed_processes = self.__finsihed_processes
-        copied.__total_processes = self.__total_processes
-        copied.__utilization_threshold = self.__utilization_threshold
+    # def __deepcopy__(self, memo):
+    #     """
+    #     Custom deepcopy implementation to avoid copying non-serializable attributes.
+    #     """
+    #     # Create an empty instance of EdgeCluster
+    #     copied = EdgeCluster.empty()
+    # 
+    #     # Copy serializable attributes
+    #     copied.__name = self.__name
+    #     copied.__nodes = self.__nodes
+    #     copied.__gpu_per_node = self.__gpu_per_node
+    #     copied.__carbon_csv_file = self.__carbon_csv_file
+    #     #copied.__carbon_intensity_dict = copy.deepcopy(self.__carbon_intensity_dict, memo)
+    #     copied.__gpus = self.__gpus
+    #     copied.__timestep = self.__timestep
+    #     #copied.__processes = copy.deepcopy(self.__processes, memo)
+    #     copied.__cumulative_energy = self.__cumulative_energy
+    #     copied.__cumulative_emission = self.__cumulative_emission
+    #     copied.__gpu_cost = self.__gpu_cost
+    #     copied.__total_gpu_cost = self.__total_gpu_cost
+    #     copied.__total_processing_time = self.__total_processing_time
+    #     copied.__finsihed_processes = self.__finsihed_processes
+    #     copied.__total_processes = self.__total_processes
+    #     copied.__utilization_threshold = self.__utilization_threshold
 
         return copied

@@ -1,6 +1,6 @@
 from genetic_scheduler import GeneticScheduler
 
-class GeneticTimePool:
+class GeneticPool:
     def __init__(self, workload_stats_dir, power_threshold=100):
         self.power_threshold = power_threshold
         self.pool = {}

@@ -35,6 +35,7 @@ class DelayPool:
                 selected_processes.append(process)
 
         selected_processes.sort(key=lambda x: x.power_draw_mean, reverse=True)
+        must_run_processes.sort(key=lambda x: x.power_draw_mean, reverse=True)
 
         return selected_processes, must_run_processes
 

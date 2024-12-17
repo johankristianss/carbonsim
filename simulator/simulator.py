@@ -8,10 +8,8 @@ import csv
 class Simulator:
     def __init__(self,
                  alg,
-                 timepool_power_threshold,
-                 timepool_process_maxwait,
-                 pool_size,
-                 pool_alg,
+                 power_threshold,
+                 process_maxwait,
                  max_processes,
                  max_days,
                  cluster_utilization_threshold,
@@ -30,17 +28,15 @@ class Simulator:
         self.__max_processes = max_processes
         self.__max_days = max_days
         self.__alg = alg
-        self.__timepool_power_threshold = timepool_power_threshold
-        self.__timepool_process_maxwait = timepool_process_maxwait
-        self.__pool_size = pool_size
-        self.__pool_alg = pool_alg
+        self.__power_threshold = power_threshold
+        self.__process_maxwait = process_maxwait
 
         self.result_dir = result_dir
         if not os.path.exists(self.result_dir):
             print("creating result dir: ", self.result_dir)
             os.makedirs(self.result_dir)
         
-        self.scheduler = Scheduler(csv_filename=result_dir + "/scheduler.csv", alg=self.__alg, timepool_power_threshold=self.__timepool_power_threshold, pool_size=self.__pool_size, pool_alg=self.__pool_alg)
+        self.scheduler = Scheduler(csv_filename=result_dir + "/scheduler.csv", alg=self.__alg, power_threshold=self.__power_threshold)
 
     def should_finish(self, tick):
         return tick > self.__max_days*24*60*60
@@ -75,7 +71,6 @@ class Simulator:
              process_counter,
              self.scheduler.total_processes,
              self.scheduler.finished_processes,
-             self.scheduler.pool_size,
              self.scheduler.total_processing_time / 3600,  # Convert seconds to hours
              self.scheduler.total_gpus * tick / 3600,     # Convert ticks to hours
              self.scheduler.avg_utilization,
@@ -140,9 +135,6 @@ class Simulator:
                     break
                 if idx == self.__max_processes: # stop adding new processes
                     # tick until all processes finished running
-                    while not self.scheduler.finalize():
-                        self.scheduler.tick()
-                        tick += 1
                     while self.scheduler.num_running_processes > 0:
                         print(self.scheduler.num_running_processes, "processes still running, tick:", tick)
                         self.scheduler.tick()
@@ -150,7 +142,7 @@ class Simulator:
                         if self.should_finish(tick):
                             break
                     break
-                process = Process(f"test_process_{idx}", idx, 0, self.__timepool_process_maxwait, os.path.join(self.__workload_dir, csv_file), self.__workloads_stats_dir)
+                process = Process(f"test_process_{idx}", idx, 0, self.__process_maxwait, os.path.join(self.__workload_dir, csv_file), self.__workloads_stats_dir)
                 ok = self.scheduler.run(process)
                 if not ok:
                     # tick until an edge-cluster is available
@@ -186,7 +178,6 @@ class Simulator:
         print("Total scheduled processes: ", self.scheduler.scheduled_processes)
         print("Total run processes: ", self.scheduler.total_processes)
         print("Total finished processes: ", self.scheduler.finished_processes)
-        print("Scheduler Pool Size:", self.scheduler.pool_size)
         print("Total processing time [h]: ", self.scheduler.total_processing_time/60/60)
         print("Theoretical max processing time [h]: ", self.scheduler.total_gpus * tick / 60 / 60)
         print("Average utilization: ", self.scheduler.avg_utilization)
