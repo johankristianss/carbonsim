@@ -22,6 +22,8 @@ class Process:
         self.__power_draw_W_dict = {}
         self.__utilization_gpu_pct_dict = {}
         self.__utilization_memory_pct_dict = {}
+        self.__planned_start_time = 0
+        self.__planned_cluster_name = None
 
         with open(self.__workload_csv_file, mode='r') as csvfile:
             csvreader = csv.DictReader(csvfile)
@@ -143,3 +145,19 @@ class Process:
 
     def decrease_deadline(self):
         self.__deadline -= 1
+
+    @property
+    def planned_start_time(self):
+        return self.__planned_start_time
+
+    @planned_start_time.setter
+    def planned_start_time(self, value):
+        self.__planned_start_time = value
+
+    @property
+    def planned_cluster_name(self):
+        return self.__planned_cluster_name
+
+    @planned_cluster_name.setter
+    def planned_cluster_name(self, value):
+        self.__planned_cluster_name = value

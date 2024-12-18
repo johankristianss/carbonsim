@@ -3,10 +3,12 @@ from deap import base, creator, tools, algorithms
 import sys
 sys.path.append('/home/johan/dev/github/johankristianss/carbonsim/simulator')
 from stats import get_process_power_draw_stat
+import pandas as pd
+import math
 
 class GeneticScheduler:
     def __init__(self, workload_stats_dir):
-        self.clusters = {} 
+        self.edgeclusters = {} 
         self.workload_stats_dir = workload_stats_dir
         self.toolbox = base.Toolbox()
         self.stats = None
@@ -16,20 +18,37 @@ class GeneticScheduler:
         creator.create("FitnessMax", base.Fitness, weights=(1.0,))
         creator.create("Individual", list, fitness=creator.FitnessMax)
 
-    def set_clusters_status(self, edgeclusters):
-        self.clusters = {}
+    def set_clusters(self, edgeclusters):
         for edgecluster in edgeclusters:
-            self.clusters[edgecluster.name] = {
-                "GPUs": edgecluster.available_gpus,
-                "CO2": edgecluster.carbon_intensity
-            }
+            self.edgeclusters[edgecluster.name] = edgecluster
+        
+        self.sorted_edge_clusters = [edge_cluster for edge_cluster in self.edgeclusters.values()]
+        self.sorted_edge_clusters.sort(key=lambda edge_cluster: edge_cluster.carbon_intensity)
+            
+    def calc_emission_forecast(self, workload):
+        forecast_data = {}
+        deadline_hours = math.ceil(workload["deadline"] / 3600)
+        forecast_hours = range(0, deadline_hours)
+        for cluster_name, cluster_obj in self.edgeclusters.items():
+            hourly_values = []
 
-    def set_clusters_status_raw(self, clusters):
-        self.clusters = clusters
+            for hour in forecast_hours:
+                future_seconds = hour * 3600
+                intensity = cluster_obj.carbon_intensity_future(future_seconds)
+                hourly_values.append(intensity)
+                forecast_data[cluster_name] = hourly_values
+
+        df = pd.DataFrame.from_dict(forecast_data,
+                orient='index',
+                columns=[f'H+{h}' for h in forecast_hours])
+        #print(df)
+        best_hour = df.min().idxmin()
+        #print(best_hour)
+        return best_hour    
 
     def print_clusters(self):
-        for cluster in self.clusters:
-            print(cluster, self.clusters[cluster])  
+        for cluster in self.edgeclusters:
+            print(cluster, self.edgeclusters[cluster].name, self.edgeclusters[cluster].available_gpus, self.edgeclusters[cluster].carbon_intensity)
 
     def set_workloads(self, workload_indices):
         self.workloads = []
@@ -40,7 +59,7 @@ class GeneticScheduler:
                 "power": power_draw_mean,
                 "energy": total_power_consumption,
                 "duration": duration,
-                "deadline": 0,
+                "deadline": 60 * 60 * 24,
             })
         return self.workloads
     
@@ -63,37 +82,45 @@ class GeneticScheduler:
 
     def calculate_fitness(self, schedule):
         penalty = 0
-        gpu_availability = {cluster: self.clusters[cluster]["GPUs"] for cluster in self.clusters}
+        gpu_availability = {cluster: self.edgeclusters[cluster].available_gpus for cluster in self.edgeclusters}
 
         energy_penalty = 0
         deadline_penalty = 0
 
-        print("Schedule:", schedule)
+        #print("Schedule:", schedule)
         
         for workload, cluster in zip(self.workloads, schedule):
+            best_hour = self.calc_emission_forecast(workload)
+            #print("best_hour", best_hour)
             if cluster == "wait":
                 if workload["deadline"] <= 0:
+                   # severely penalize if deadline is missed 
                    deadline_penalty += 1000000
-                elif workload["deadline"] > 0 and workload["power"] > 100:
-                    # find the lowest co2 intensity cluster in all available clusters
-                    # lowest_co2_intensity = 0
-                    # for cluster in self.clusters:
-                    #     if gpu_availability[cluster] > 0:
-                    #         if lowest_co2_intensity == 0 or self.clusters[cluster]["CO2"] < lowest_co2_intensity:
-                    #             lowest_co2_intensity = self.clusters[cluster]["CO2"]
-
-                    deadline_penalty += workload["power"] # * lowest_co2_intensity / 2
+                else:
+                    if best_hour == "H+7": 
+                        co2_intensity = self.sorted_edge_clusters[0].carbon_intensity
+                        deadline_penalty += workload["power"] * co2_intensity
                 continue
 
+            print(cluster) 
+            print("best cluster", self.sorted_edge_clusters[0].name)
+            print("gpu_availability", gpu_availability[cluster])
+            if cluster == self.sorted_edge_clusters[0].name and gpu_availability[cluster] > 0:
+                # if best cluster is not fullt utilized
+                penalty += 1000
+
+            # severely penalize if over using GPUs
             if gpu_availability[cluster] <= 0:
-                penalty += 10000
+                penalty += 1000000
             
             gpu_availability[cluster] -= 1
 
-            co2_intensity = self.clusters[cluster]["CO2"]
+            if gpu_availability[cluster] > 0:
+                penalty += 1000
+
+            co2_intensity = self.edgeclusters[cluster].carbon_intensity
             power = workload["power"]
             emission = co2_intensity * power
-            #emission = co2_intensity * workload["energy"]
             energy_penalty += emission
 
         min_energy_penalty = 0
@@ -113,11 +140,11 @@ class GeneticScheduler:
         for i in range(len(individual)):
             if random.random() < 0.2:
                 #individual[i] = random.choice(list(self.clusters.keys()))
-                individual[i] = random.choice(list(self.clusters.keys()) + ["wait"])
+                individual[i] = random.choice(list(self.edgeclusters.keys()) + ["wait"])
         return individual,
 
     def initialize_deap(self):
-        self.toolbox.register("attr_cluster", lambda: random.choice(list(self.clusters.keys()) + ["wait"]))
+        self.toolbox.register("attr_cluster", lambda: random.choice(list(self.edgeclusters.keys()) + ["wait"]))
         self.toolbox.register("individual", tools.initRepeat, creator.Individual, self.toolbox.attr_cluster, n=len(self.workloads))
         self.toolbox.register("population", tools.initRepeat, list, self.toolbox.individual)
         self.toolbox.register("evaluate", self.calculate_fitness)

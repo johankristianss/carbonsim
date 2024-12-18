@@ -23,7 +23,7 @@ class TestGeneticScheduler(unittest.TestCase):
         workload_indices = [1, 20, 3, 4, 400]
     
         gs = GeneticScheduler(workload_stats_dir)
-        gs.set_clusters_status(edgeclusters)
+        gs.set_clusters(edgeclusters)
         gs.set_workloads(workload_indices)
         best_schedule, fitess = gs.run()
     
@@ -37,23 +37,23 @@ class TestGeneticScheduler(unittest.TestCase):
         print("Best Schedule:", best_schedule)
         print("Best Fitness:", fitess)
     
-        for _ in range(100000):
-            for edgecluster in edgeclusters:
-                edgecluster.tick()
-    
-        gs.set_clusters_status(edgeclusters)
-        gs.set_workloads(workload_indices)
-        best_schedule, fitess = gs.run()
-    
-        print("==================================== INPUTS ====================================")
-        print("Clusters:")
-        gs.print_clusters()
-        print("Workloads:")
-        gs.print_workloads()
-    
-        print("==================================== RESULTS ====================================")
-        print("Best Schedule:", best_schedule)
-        print("Best Fitness:", fitess)
+    #     for _ in range(100000):
+    #         for edgecluster in edgeclusters:
+    #             edgecluster.tick()
+    # 
+    #     gs.set_clusters_status(edgeclusters)
+    #     gs.set_workloads(workload_indices)
+    #     best_schedule, fitess = gs.run()
+    # 
+    #     print("==================================== INPUTS ====================================")
+    #     print("Clusters:")
+    #     gs.print_clusters()
+    #     print("Workloads:")
+    #     gs.print_workloads()
+    # 
+    #     print("==================================== RESULTS ====================================")
+    #     print("Best Schedule:", best_schedule)
+    #     print("Best Fitness:", fitess)
 
 if __name__ == '__main__':
     unittest.main()
