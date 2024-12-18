@@ -18,6 +18,16 @@ class TestReservation(unittest.TestCase):
         reservation = Reservation(edgeclusters)
         reservation.add_process(process)
 
+        print("-------------")
+        reservation.select_processes()
+        print("-------------")
+        
+        reservation.remove_process(process.name)
+        
+        print("-------------")
+        reservation.select_processes()
+        print("-------------")
+
         # process = Process("test_process_2", 0, 0, 60, "../filtered_workloads/1.csv", workloads_stats_dir)
         # ok = scheduler.run(process)
         # if not ok:

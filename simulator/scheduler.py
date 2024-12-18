@@ -7,6 +7,7 @@ sys.path.append('/home/johan/dev/github/johankristianss/carbonsim/simulator/gene
 from genetic_pool import GeneticPool
 from greedy_binpack_pool import GreedyBinpackPool
 from delay_pool import DelayPool
+from reservation import Reservation
 import pandas as pd
 import math
 
@@ -25,6 +26,7 @@ class Scheduler:
         self.__power_threshold = power_threshold
         self.__greedy_binpack_pool = GreedyBinpackPool(power_threshold=self.__power_threshold)
         self.__delay_pool = DelayPool()
+        self.__reservation = Reservation()
 
         self.average_utilization_sum = 0
         self.__scheduled_processs = 0
