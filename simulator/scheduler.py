@@ -149,24 +149,23 @@ class Scheduler:
         
         if self.__alg == 'reservation':
             #print("------------------------------- reservation background -------------------------------")
-            #self.__reservation.print()
-            # the background function is only called every 60 seconds
-            # this means that we need to search for scheduled processes that are due to run now
             selected_processes = self.__reservation.select_processes()
 
             # these processes must run now immediately
             for process in selected_processes:
-                
                 selected_edge_cluster_name = process.planned_cluster_name
                 selected_edge_cluster = self.__edge_clusters_dict[selected_edge_cluster_name]
-                print("process: ", process.name, "planned edge cluster: ", process.planned_cluster_name)
                     
                 if selected_edge_cluster.run(process):
-                    print("XXXXXXXXXXXXXXXXXXXXXXx RUN process: ", process.name)
+                    print(self.tick_count, "Successfully started process:", process.name, "on planned edge cluster:", process.planned_cluster_name)
                     self.__reservation.remove_process(process.name)
                 else:
-                    print("failed to run process")
+                    print(self.tick_count,"ERROR failed to start process:", process.name, "on planned edge cluster:", process.planned_cluster_name)
                     print("Tick: ", self.tick_count)
+                    self.__reservation.print()
+                    for self.__edge_cluster in self.__edge_clusters_dict.values():
+                        self.__edge_cluster.print_status()
+                    os._exit(1)
 
         if self.__alg == 'genetic_timepool':
             edge_clusters = list(self.__edge_clusters_dict.values())
@@ -271,14 +270,14 @@ class Scheduler:
         #     print("runnning background, tick: ", self.tick_count)
         #     self.background()
             
-        self.background()
-        
         self.tick_count += 1
         
         self.__genetic_pool.tick()
         self.__greedy_binpack_pool.tick()
         self.__delay_pool.tick()
         self.__reservation.tick()
+        
+        self.background()
 
     @property
     def num_edge_clusters(self):

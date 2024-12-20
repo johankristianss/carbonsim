@@ -48,9 +48,16 @@ class Process:
 
     def tick(self):
         self.__timestep += 1
-        if self.__timestep not in self.__power_draw_W_dict:
+        # if self.__timestep not in self.__power_draw_W_dict:
+        #     return True
+       
+        exectime = self.total_length_seconds
+        remaining_time = exectime - self.__timestep
+
+        if remaining_time <= 0:
+            print("XXXXXXXXXXXXXXXXXXXXXXXXX Process", self.__name, "has finished")
             return True
-        
+
         self.__duration += 1
 
         current_energy = self.__power_draw_W_dict.get(self.__timestep, 0.0) / 3600.0
@@ -69,6 +76,8 @@ class Process:
         self.__cumulative_emission += self.__emission
 
         self.__current_energy = current_energy
+
+        return False
 
     @property
     def name(self):

@@ -89,8 +89,10 @@ class EdgeCluster:
             process.carbon_intensity = current_carbon_intensity
             if process.tick():
                 print(f'Process <{process.name}> finished at timestep {self.__timestep}')
+                # print available GPUs
                 self.__processes.remove(process)  
                 self.__finsihed_processes += 1
+                print(f'Available GPUs: {self.available_gpus}')
                 continue 
 
             self.__cumulative_energy += process.energy
@@ -217,9 +219,28 @@ class EdgeCluster:
         return self.__total_processes
 
     @property
+    def current_processes(self):
+        return len(self.__processes)
+
+    @property
     def finished_processes(self):
         return self.__finsihed_processes
 
     @property
     def current_carbon_intensity(self):
         return self.__carbon_intensity_dict.get(self.__timestep, 0.0)
+
+
+    def print_status(self):
+        print("Workload on EdgeCluster <{}>".format(self.__name))
+        print("  Total processes: {}".format(self.__total_processes))
+        print("  Finished processes: {}".format(self.__finsihed_processes))
+        print("  Current processes: {}".format(self.current_processes))
+        print("  Available GPUs: {}".format(self.available_gpus))
+        print("  Total GPUs: {}".format(self.gpus))
+        print("  Current tick: {}".format(self.__timestep)) 
+
+        print("  Running processes:")
+        for process in self.__processes:
+            remaining_time = process.total_length_seconds - process.timestep
+            print(f'    Process <{process.name}> is running on EdgeCluster <{self.__name}>, Remaining time: {remaining_time} seconds')

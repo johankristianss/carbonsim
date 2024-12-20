@@ -14,31 +14,31 @@ class TestReservation(unittest.TestCase):
 
         workloads_stats_dir = "../filtered_workloads_1s_stats"
 
-        if False:
-            reservation = Reservation()
-            reservation.set_edgeclusters(edgeclusters)
-            reservation.add_process(process1)
-            reservation.dump_json("layout.json")
-            return
+        # if False:
+        #     reservation = Reservation()
+        #     reservation.set_edgeclusters(edgeclusters)
+        #     reservation.add_process(process1)
+        #     reservation.dump_json("layout.json")
+        #     return
 
-        process1 = Process("test_process_0", 0, 0, 60, "../filtered_workloads/0.csv", workloads_stats_dir)
-        process2 = Process("test_process_1", 1, 0, 60*60*24, "../filtered_workloads/1.csv", workloads_stats_dir)
-        process3 = Process("test_process_2", 2, 0, 60*60*24, "../filtered_workloads/2.csv", workloads_stats_dir)
-        process4 = Process("test_process_3", 3, 0, 60*60*24, "../filtered_workloads/3.csv", workloads_stats_dir)
-
+        # process1 = Process("test_process_0", 0, 0, 60, "../filtered_workloads/0.csv", workloads_stats_dir)
+        # process2 = Process("test_process_1", 1, 0, 60*60*24, "../filtered_workloads/1.csv", workloads_stats_dir)
+        # process3 = Process("test_process_2", 2, 0, 60*60*24, "../filtered_workloads/2.csv", workloads_stats_dir)
+        # process4 = Process("test_process_3", 3, 0, 60*60*24, "../filtered_workloads/3.csv", workloads_stats_dir)
+        #
         processes = []
-        for i in range(100):
-            process = Process(f"test_process_{i}", i, 0, 60*60*24, "../filtered_workloads/0.csv", workloads_stats_dir)
+        for i in range(20):
+            process = Process(f"p_{i}", i, 0, 60*60*24, f"../filtered_workloads_1s/{i}.csv", workloads_stats_dir)
             processes.append(process)
 
        
         reservation = Reservation()
         reservation.set_edgeclusters(edgeclusters)
 
-        reservation.add_process(process1)
-        reservation.add_process(process2)
-        reservation.add_process(process3)
-        reservation.add_process(process4)
+        # reservation.add_process(process1)
+        # reservation.add_process(process2)
+        # reservation.add_process(process3)
+        # reservation.add_process(process4)
 
         for process in processes:
             reservation.add_process(process)
@@ -48,16 +48,17 @@ class TestReservation(unittest.TestCase):
             print("Planned exectim, next 24h:", reservation.planned_exectime())
 
         #print(reservation.available_gpus_at_tick("Umea", 10))
-        print(reservation.available_gpus_at_tick("Umea", 28680, 28700))
+        #print(reservation.available_gpus_at_tick("Umea", 28680, 28700))
         #print(reservation.available_gpus_at_tick("Umea", 28780))
 
-        print("available_gpus_at_tick: ", reservation.available_gpus_at_tick("Umea", 73500, 86396))
+        #print("available_gpus_at_tick: ", reservation.available_gpus_at_tick("Umea", 73500, 86396))
 
+        reservation.print()
         reservation.dump_json("layout.json")
 
-        selected_processes = reservation.select_processes_at_tick(65)
-        for process in selected_processes:
-            print(process.name)
+        #selected_processes = reservation.select_processes_at_tick(65)
+        #for process in selected_processes:
+         #   print(process.name)
 
         # selected_processes = reservation.select_processes_at_tick(46800)
         # for process in selected_processes:
