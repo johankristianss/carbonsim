@@ -10,6 +10,7 @@ from delay_pool import DelayPool
 from reservation import Reservation
 import pandas as pd
 import math
+import os
 
 class Scheduler:
     def __init__(self, csv_filename='./scheduler.csv', workloads_stats_dir='./filtered_workloads_1s_stats', alg='random', power_threshold=150, co2_intensity_threshold=20):
@@ -34,8 +35,11 @@ class Scheduler:
     def add_edge_cluster(self, edge_cluster):
         self.__edge_clusters_dict[edge_cluster.name] = edge_cluster
 
+    def start(self):
+        self.__reservation.set_edgeclusters(self.__edge_clusters_dict)
+
     def background(self):
-        print("=============================== run background ================================")
+        #print("=============================== run background ================================")
 
         if self.__alg == 'greedy_binpack':
             high_effect_processes, low_effect_processes, must_run_processes = self.__greedy_binpack_pool.select_processes()
@@ -142,6 +146,27 @@ class Scheduler:
      
                         if selected_edge_cluster.run(process):
                             self.__delay_pool.remove_process(process.name)
+        
+        if self.__alg == 'reservation':
+            #print("------------------------------- reservation background -------------------------------")
+            #self.__reservation.print()
+            # the background function is only called every 60 seconds
+            # this means that we need to search for scheduled processes that are due to run now
+            selected_processes = self.__reservation.select_processes()
+
+            # these processes must run now immediately
+            for process in selected_processes:
+                
+                selected_edge_cluster_name = process.planned_cluster_name
+                selected_edge_cluster = self.__edge_clusters_dict[selected_edge_cluster_name]
+                print("process: ", process.name, "planned edge cluster: ", process.planned_cluster_name)
+                    
+                if selected_edge_cluster.run(process):
+                    print("XXXXXXXXXXXXXXXXXXXXXXx RUN process: ", process.name)
+                    self.__reservation.remove_process(process.name)
+                else:
+                    print("failed to run process")
+                    print("Tick: ", self.tick_count)
 
         if self.__alg == 'genetic_timepool':
             edge_clusters = list(self.__edge_clusters_dict.values())
@@ -205,6 +230,13 @@ class Scheduler:
             self.__scheduled_processs += 1
             return True
         
+        elif self.__alg == 'reservation':
+            print("----------------------- reservation scheduling -----------------------")
+            ############# reservation scheduling ############
+            self.__reservation.add_process(process)
+            self.__scheduled_processs += 1
+            return True
+        
         elif self.__alg == 'random':
             print("-----------------------  random scheduling -----------------------")
             ############# random scheduling ############
@@ -235,15 +267,18 @@ class Scheduler:
         })
 
         # run background processes every 60 seconds
-        if self.tick_count % 60 == 0:
-            print("runnning background, tick: ", self.tick_count)
-            self.background()
+        # if self.tick_count % 60 == 0:
+        #     print("runnning background, tick: ", self.tick_count)
+        #     self.background()
+            
+        self.background()
         
         self.tick_count += 1
         
         self.__genetic_pool.tick()
         self.__greedy_binpack_pool.tick()
         self.__delay_pool.tick()
+        self.__reservation.tick()
 
     @property
     def num_edge_clusters(self):

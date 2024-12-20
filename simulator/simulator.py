@@ -109,6 +109,8 @@ class Simulator:
             )
             self.scheduler.add_edge_cluster(edge_cluster)
 
+        self.scheduler.start()
+
         log_file_path = os.path.join(self.__log_file_dir, self.__log_file)
         with open(log_file_path, 'r') as log_file:
             reader = csv.DictReader(log_file)
@@ -144,7 +146,7 @@ class Simulator:
                         if self.should_finish(tick):
                             break
                     break
-                process = Process(f"test_process_{idx}", idx, 0, self.__process_maxwait, os.path.join(self.__workload_dir, csv_file), self.__workloads_stats_dir)
+                process = Process(f"p_{idx}", idx, 0, self.__process_maxwait, os.path.join(self.__workload_dir, csv_file), self.__workloads_stats_dir)
                 ok = self.scheduler.run(process)
                 if not ok:
                     # tick until an edge-cluster is available
