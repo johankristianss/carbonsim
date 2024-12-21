@@ -232,9 +232,12 @@ class Scheduler:
         elif self.__alg == 'reservation':
             print("----------------------- reservation scheduling -----------------------")
             ############# reservation scheduling ############
-            self.__reservation.add_process(process)
-            self.__scheduled_processs += 1
-            return True
+            ok = self.__reservation.add_process(process)
+            if ok:
+                self.__scheduled_processs += 1
+                return True
+            else:
+                return False
         
         elif self.__alg == 'random':
             print("-----------------------  random scheduling -----------------------")
