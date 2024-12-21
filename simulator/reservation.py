@@ -114,7 +114,7 @@ class Reservation:
 
         # Pick the best assignment
         best_benefit, best_cluster_name, best_tick = possible_assignments[0]
-        process.planned_start_time = best_tick
+        process.planned_start_time = best_tick + 1  # +1 we cannot start at the same tick
         process.planned_cluster_name = best_cluster_name
         self.reservation[best_cluster_name].append(process)
     
@@ -163,3 +163,9 @@ class Reservation:
 
     def increase_tick(self, tick):
         self.t += tick
+
+    def planned_processes(self):
+        total = 0
+        for clustername in self.reservation:
+            total += len(self.reservation[clustername])
+        return total

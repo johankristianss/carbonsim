@@ -34,9 +34,17 @@ class Scheduler:
 
     def add_edge_cluster(self, edge_cluster):
         self.__edge_clusters_dict[edge_cluster.name] = edge_cluster
+        edge_cluster.set_scheduler(self)
 
     def start(self):
         self.__reservation.set_edgeclusters(self.__edge_clusters_dict)
+
+    def finalize(self):
+        if self.__alg == 'reservation':
+            if self.__reservation.planned_processes() > 0:
+                return False
+            else:
+                return True
 
     def background(self):
         #print("=============================== run background ================================")
@@ -151,6 +159,14 @@ class Scheduler:
             #print("------------------------------- reservation background -------------------------------")
             selected_processes = self.__reservation.select_processes()
 
+            # if self.tick_count == 14616:
+            #      print("-------------------------------------------------------------- BEFORE SCHEDULING ")
+            #      print("selected processes: ", selected_processes)
+            #      print("reservation pool: ")
+            #      self.__reservation.print()
+            #      for self.__edge_cluster in self.__edge_clusters_dict.values():
+            #          self.__edge_cluster.print_status()
+
             # these processes must run now immediately
             for process in selected_processes:
                 selected_edge_cluster_name = process.planned_cluster_name
@@ -158,7 +174,7 @@ class Scheduler:
                     
                 if selected_edge_cluster.run(process):
                     print(self.tick_count, "Successfully started process:", process.name, "on planned edge cluster:", process.planned_cluster_name)
-                    self.__reservation.remove_process(process.name)
+                    #self.__reservation.remove_process(process.name)
                 else:
                     print(self.tick_count,"ERROR failed to start process:", process.name, "on planned edge cluster:", process.planned_cluster_name)
                     print("Tick: ", self.tick_count)
@@ -166,6 +182,14 @@ class Scheduler:
                     for self.__edge_cluster in self.__edge_clusters_dict.values():
                         self.__edge_cluster.print_status()
                     os._exit(1)
+
+            # if self.tick_count == 14616:
+            #      print("-------------------------------------------------------------- AFTER SCHEDULING ")
+            #      print("reservation pool after scheduling: ")
+            #      self.__reservation.print()
+            #      for self.__edge_cluster in self.__edge_clusters_dict.values():
+            #          self.__edge_cluster.print_status()
+            #      os._exit(1)
 
         if self.__alg == 'genetic_timepool':
             edge_clusters = list(self.__edge_clusters_dict.values())
@@ -192,6 +216,10 @@ class Scheduler:
                     self.__genetic_timepool.remove_process(process_idx)
             return True
 
+    def process_completed(self, process):
+        if self.__alg == 'reservation':
+            self.__reservation.remove_process(process.name)
+         
     def run(self, process):
         if self.__alg == 'genetic_timepool':
             print("----------------------- genetic time pool scheduling -----------------------")
@@ -333,3 +361,6 @@ class Scheduler:
     @property
     def total_gpus(self):
         return sum([edge_cluster.gpus for edge_cluster in self.__edge_clusters_dict.values()])
+
+    def print_reservation(self):
+        self.__reservation.print()  

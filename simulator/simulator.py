@@ -138,6 +138,10 @@ class Simulator:
                 if self.should_finish(tick):
                     break
                 if idx == self.__max_processes: # stop adding new processes
+                    while not self.scheduler.finalize():
+                        self.scheduler.tick()
+                        tick += 1
+
                     # tick until all processes finished running
                     while self.scheduler.num_running_processes > 0:
                         print(self.scheduler.num_running_processes, "processes still running, tick:", tick)
@@ -186,5 +190,7 @@ class Simulator:
         print("Theoretical max processing time [h]: ", self.scheduler.total_gpus * tick / 60 / 60)
         print("Average utilization: ", self.scheduler.avg_utilization)
         print("Total time [h]: ", tick/60/60)
+
+        print(self.scheduler.print_reservation())
 
         self.write_summary_to_csv(process_counter, tick, file_path=self.result_dir + "/summary.csv")

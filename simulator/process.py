@@ -54,8 +54,11 @@ class Process:
         exectime = self.total_length_seconds
         remaining_time = exectime - self.__timestep
 
+        #if self.__name == "p_166":
+        #    print("Process", self.__name, "remaining time:", remaining_time)
+
         if remaining_time <= 0:
-            print("XXXXXXXXXXXXXXXXXXXXXXXXX Process", self.__name, "has finished")
+            #print("XXXXXXXXXXXXXXXXXXXXXXXXX Process", self.__name, "has finished")
             return True
 
         self.__duration += 1

@@ -37,6 +37,9 @@ class EdgeCluster:
     def __del__(self):
         self.__result_csvfile.close()
 
+    def set_scheduler(self, scheduler):
+        self.__scheduler = scheduler
+
     @classmethod
     def empty(cls):
         """
@@ -92,7 +95,8 @@ class EdgeCluster:
                 # print available GPUs
                 self.__processes.remove(process)  
                 self.__finsihed_processes += 1
-                print(f'Available GPUs: {self.available_gpus}')
+                #print(f'Available GPUs: {self.available_gpus}')
+                self.__scheduler.process_completed(process)
                 continue 
 
             self.__cumulative_energy += process.energy
