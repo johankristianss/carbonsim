@@ -13,7 +13,7 @@ log_dir = "./logs/100"
 log_file = "log_2.csv"
 
 alg = "random"
-results_dir = "./results/100/random_single"
+results_dir = "./results/100_single/random"
 power_threshold = 150 # watts
 process_maxwait = 60 * 2 # seconds
 co2_intensity_threshold = 160

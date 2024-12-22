@@ -9,11 +9,11 @@ cluster_utilization_threshold = 1.0
 workload_dir = "./filtered_workloads_1s"
 workloads_stats_dir = "./filtered_workloads_1s_stats"
 cluster_config = "./edge-clusters-small.json"
-log_dir = "./logs/30"
+log_dir = "./logs/100"
 log_file = "log_2.csv"
 
-alg = "reservation"
-results_dir = "./results/30/reservation_24"
+alg = "timepacking"
+results_dir = "./results/100_small/timepacking_24"
 power_threshold = 150 # watts
 process_maxwait = 60 * 60 * 24 # seconds
 co2_intensity_threshold = 160

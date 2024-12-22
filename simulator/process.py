@@ -49,7 +49,6 @@ class Process:
     def tick(self):
         self.__timestep += 1
         if self.__timestep not in self.__power_draw_W_dict:
-            print("timestep", self.__timestep, "not in power_draw_W_dict")
             print("Process", self.__name, "has finished")
             return True
        

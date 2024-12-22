@@ -8,6 +8,7 @@ from genetic_pool import GeneticPool
 from greedy_binpack_pool import GreedyBinpackPool
 from delay_pool import DelayPool
 from reservation import Reservation
+from timepacking import TimePacking
 import pandas as pd
 import math
 import os
@@ -28,6 +29,7 @@ class Scheduler:
         self.__greedy_binpack_pool = GreedyBinpackPool(power_threshold=self.__power_threshold)
         self.__delay_pool = DelayPool()
         self.__reservation = Reservation()
+        self.__timepacking = TimePacking()
 
         self.average_utilization_sum = 0
         self.__scheduled_processs = 0
@@ -38,10 +40,20 @@ class Scheduler:
 
     def start(self):
         self.__reservation.set_edgeclusters(self.__edge_clusters_dict)
+        self.__timepacking.set_edgeclusters(self.__edge_clusters_dict)
 
     def finalize(self):
         if self.__alg == 'reservation':
             if self.__reservation.planned_processes() > 0:
+                return False
+            else:
+                return True
+        elif self.__alg == 'timepacking':
+            if self.__timepacking.planned_processes() > 0:
+                return False
+            return True
+        elif self.__alg == 'delay':
+            if self.__delay_pool.size() > 0:
                 return False
             else:
                 return True
@@ -52,10 +64,10 @@ class Scheduler:
         #print("=============================== run background ================================")
 
         if self.__alg == 'greedy_binpack':
+            #print("------------------------------- greedy_binpack background -------------------------------")
             high_effect_processes, low_effect_processes, must_run_processes = self.__greedy_binpack_pool.select_processes()
             #self.__greedy_binpack_pool.print_pool()
 
-            print("------------------------------- greedy_binpack background -------------------------------")
             # print("high_effect_processes: ", len(high_effect_processes))
             # print("low_effect_processes: ", len(low_effect_processes))
             # print("must_run_processes: ", len(must_run_processes))
@@ -100,6 +112,7 @@ class Scheduler:
             self.__greedy_binpack_pool.print_pool()
         
         if self.__alg == 'delay':
+            #print("------------------------------- delay background -------------------------------")
             selected_processes, must_run_processes = self.__delay_pool.select_processes()
 
             #self.__delay_pool.print_pool()
@@ -121,6 +134,8 @@ class Scheduler:
                      deadline_hours = math.ceil(process.deadline / 3600)
                      forecast_hours = range(0, deadline_hours)
          
+                     #print("forecast hours: ", forecast_hours)
+
                      forecast_data = {}
                      for cluster_name, cluster_obj in clusters.items():
                          hourly_values = []
@@ -134,7 +149,7 @@ class Scheduler:
                              orient='index', 
                              columns=[f'H+{h}' for h in forecast_hours])
                      best_hour = df.min().idxmin()
-                     # print("process: ", process.name, " best hour: ", best_hour, "power draw: ", process.power_draw_mean, "deadline: ", process.deadline)
+                     #print("process: ", process.name, " best hour: ", best_hour, "power draw: ", process.power_draw_mean, "deadline: ", process.deadline)
      
                      if best_hour == 'H+0':
                          available_edge_clusters = [edge_cluster for edge_cluster in self.__edge_clusters_dict.values() if edge_cluster.available]                         
@@ -160,6 +175,8 @@ class Scheduler:
         if self.__alg == 'reservation':
             #print("------------------------------- reservation background -------------------------------")
             selected_processes = self.__reservation.select_processes()
+
+            #self.__reservation.print()
 
             # if self.tick_count == 14616:
             #      print("-------------------------------------------------------------- BEFORE SCHEDULING ")
@@ -192,6 +209,25 @@ class Scheduler:
             #      for self.__edge_cluster in self.__edge_clusters_dict.values():
             #          self.__edge_cluster.print_status()
             #      os._exit(1)
+        
+        if self.__alg == 'timepacking':
+            #print("------------------------------- reservation background -------------------------------")
+            selected_processes = self.__timepacking.select_processes()
+
+            # these processes must run now immediately
+            for process in selected_processes:
+                selected_edge_cluster_name = process.planned_cluster_name
+                selected_edge_cluster = self.__edge_clusters_dict[selected_edge_cluster_name]
+                    
+                if selected_edge_cluster.run(process):
+                    print(self.tick_count, "Successfully started process:", process.name, "on planned edge cluster:", process.planned_cluster_name)
+                else:
+                    print(self.tick_count,"ERROR failed to start process:", process.name, "on planned edge cluster:", process.planned_cluster_name)
+                    print("Tick: ", self.tick_count)
+                    self.__reservation.print()
+                    for self.__edge_cluster in self.__edge_clusters_dict.values():
+                        self.__edge_cluster.print_status()
+                    os._exit(1)
 
         if self.__alg == 'genetic_timepool':
             edge_clusters = list(self.__edge_clusters_dict.values())
@@ -268,7 +304,16 @@ class Scheduler:
                 return True
             else:
                 return False
-        
+        elif self.__alg == 'timepacking':
+            print("----------------------- timepacking scheduling -----------------------")
+            ############# timepacking scheduling ############
+            ok = self.__timepacking.add_process(process)
+            if ok:
+                self.__scheduled_processs += 1
+                return True
+            else:
+                return False
+
         elif self.__alg == 'random':
             print("-----------------------  random scheduling -----------------------")
             ############# random scheduling ############
@@ -309,6 +354,7 @@ class Scheduler:
         self.__greedy_binpack_pool.tick()
         self.__delay_pool.tick()
         self.__reservation.tick()
+        self.__timepacking.tick()
         
         self.background()
 

@@ -8,7 +8,7 @@ import json
 from time import time 
 from bisect import bisect_left
     
-def available_gpus_at_tick(start, end, processesStatus):
+def available_gpus_at_tick2(start, end, processesStatus):
     reserved_gpus = 0
 
     processStartTimes = processesStatus["start_times"]
@@ -26,7 +26,7 @@ def available_gpus_at_tick(start, end, processesStatus):
                 return False
     return True
 
-class Reservation:
+class TimePacking:
     def __init__(self):
         self.edgeclusters = {} 
         self.reservation = {}
@@ -78,51 +78,46 @@ class Reservation:
         deadline_ticks = process.deadline
         forecast_ticks = range(self.t, self.t + deadline_ticks, 1)
 
-        #print("Forecast ticks:", forecast_ticks)
-
         possible_assignments = []
         processStatus = {}
-        for cluster_name in self.edgeclusters.keys():
-            processStatus[cluster_name] = {}
-            processes = self.reservation[cluster_name]
+        sorted_edgeclusters = [edge_cluster for edge_cluster in self.edgeclusters.values()]   
+        sorted_edgeclusters.sort(key=lambda edge_cluster: edge_cluster.carbon_intensity)
 
-            processStatus[cluster_name]["start_times"] = [p.planned_start_time for p in processes]
-            processStatus[cluster_name]["end_times"] = [p.planned_start_time + p.total_length_seconds for p in processes]
-            processStatus[cluster_name]["total_gpus"] = self.edgeclusters[cluster_name].gpus
+        for cluster in sorted_edgeclusters:
+            processStatus[cluster.name] = {}
+            processes = self.reservation[cluster.name]
 
-        for tick in forecast_ticks:
-            for cluster_name in self.edgeclusters.keys():
-                available_gpus = available_gpus_at_tick(tick, tick + process.total_length_seconds, processStatus[cluster_name])
+            processStatus[cluster.name]["start_times"] = [p.planned_start_time for p in processes]
+            processStatus[cluster.name]["end_times"] = [p.planned_start_time + p.total_length_seconds for p in processes]
+            processStatus[cluster.name]["total_gpus"] = self.edgeclusters[cluster.name].gpus
+
+        for cluster_name in self.edgeclusters.keys(): # Start with the cluster with the lowest carbon intensity
+            for tick in forecast_ticks:
+                available_gpus = available_gpus_at_tick2(tick, tick + process.total_length_seconds, processStatus[cluster_name])
 
                 if available_gpus:
-                    benefit = self.calculate_benefit(process, cluster_name, tick)
-                    possible_assignments.append((benefit, cluster_name, tick))
+                    possible_assignments.append((tick, cluster_name))
 
-        # Sort assignments by tick (ascending) and benefit (descending)
-        #possible_assignments.sort(key=lambda x: (x[2], -x[0]))
-        #print("Possible assignments:", possible_assignments)
-        # Sort assignments by highest benefit and spread start times
+            possible_assignments.sort(reverse=False, key=lambda x: x[0])
 
-        possible_assignments.sort(reverse=False, key=lambda x: x[0])
+            if len(possible_assignments) == 0:
+                continue  # Continue to the next cluster
 
-        # for i in range(len(possible_assignments)):
-        #      print(f"Benefit: {possible_assignments[i][0]: .2f}, Cluster: {possible_assignments[i][1]}, Tick: {possible_assignments[i][2]}")
+            #for i in range(len(possible_assignments)):
+            #    print(f"Tick: {possible_assignments[i][0]}, Cluster: {possible_assignments[i][1]}")
+            # Pick the best assignment
+            best_tick, best_cluster_name = possible_assignments[0]
+            process.planned_start_time = best_tick + 1  # +1 we cannot start at the same tick
+            process.planned_cluster_name = best_cluster_name
+            self.reservation[best_cluster_name].append(process)
+        
+            estimated_co2_at_start_time = self.edgeclusters[process.planned_cluster_name].carbon_intensity_future(process.planned_start_time)
+        
+            print(f"{self.t}: Assigned {process.name} with length {process.total_length_seconds}s to {best_cluster_name} cluster at tick {best_tick}", f"Estimated CO2 intensity at start time:{estimated_co2_at_start_time: .2f} gCO2/kWh.")
+            return True
 
-        if len(possible_assignments) == 0:
-            print(f"Unable to schedule process {process.name} within its deadline using bin-packing.")
-            return False
-
-        # Pick the best assignment
-        best_benefit, best_cluster_name, best_tick = possible_assignments[0]
-        process.planned_start_time = best_tick + 1  # +1 we cannot start at the same tick
-        process.planned_cluster_name = best_cluster_name
-        self.reservation[best_cluster_name].append(process)
-    
-        estimated_co2_at_start_time = self.edgeclusters[process.planned_cluster_name].carbon_intensity_future(process.planned_start_time)
-    
-        print(f"{self.t}: Assigned {process.name} with length {process.total_length_seconds}s to {best_cluster_name} cluster at tick {best_tick} with benefit{best_benefit: .2f}.", f"Estimated CO2 intensity at start time:{estimated_co2_at_start_time: .2f} gCO2/kWh.")
-
-        return True
+        print(f"Unable to schedule process {process.name} within its deadline using timepacking.")
+        return False
 
     def select_processes(self, range=0):
         return self.select_processes_at_tick(self.t, range)

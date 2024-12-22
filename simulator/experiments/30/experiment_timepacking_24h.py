@@ -12,8 +12,8 @@ cluster_config = "./edge-clusters-small.json"
 log_dir = "./logs/30"
 log_file = "log_2.csv"
 
-alg = "reservation"
-results_dir = "./results/30/reservation_24"
+alg = "timepacking"
+results_dir = "./results/30/timepacking_24"
 power_threshold = 150 # watts
 process_maxwait = 60 * 60 * 24 # seconds
 co2_intensity_threshold = 160

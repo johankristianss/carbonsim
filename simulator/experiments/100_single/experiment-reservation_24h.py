@@ -13,7 +13,7 @@ log_dir = "./logs/100"
 log_file = "log_2.csv"
 
 alg = "reservation"
-results_dir = "./results/100_single/reservation"
+results_dir = "./results/100_single/reservation_24"
 power_threshold = 150 # watts
 process_maxwait = 60 * 60 * 24 # seconds
 co2_intensity_threshold = 160
