@@ -45,13 +45,15 @@ class Scheduler:
                 return False
             else:
                 return True
+        else:
+            return True
 
     def background(self):
         #print("=============================== run background ================================")
 
         if self.__alg == 'greedy_binpack':
             high_effect_processes, low_effect_processes, must_run_processes = self.__greedy_binpack_pool.select_processes()
-            self.__greedy_binpack_pool.print_pool()
+            #self.__greedy_binpack_pool.print_pool()
 
             print("------------------------------- greedy_binpack background -------------------------------")
             # print("high_effect_processes: ", len(high_effect_processes))
@@ -100,7 +102,7 @@ class Scheduler:
         if self.__alg == 'delay':
             selected_processes, must_run_processes = self.__delay_pool.select_processes()
 
-            self.__delay_pool.print_pool()
+            #self.__delay_pool.print_pool()
 
             # these processes must run now immediately
             for process in must_run_processes:
@@ -274,7 +276,7 @@ class Scheduler:
             if not available_edge_clusters:
                 return False
             selected_edge_cluster = random.choice(available_edge_clusters)
-            print("selected edge cluster: ", selected_edge_cluster.name)
+            #print("selected edge cluster: ", selected_edge_cluster.name)
             self.__scheduled_processs += 1
             return selected_edge_cluster.run(process)
         else :

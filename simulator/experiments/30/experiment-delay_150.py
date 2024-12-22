@@ -12,10 +12,10 @@ cluster_config = "./edge-clusters-small.json"
 log_dir = "./logs/30"
 log_file = "log_2.csv"
 
-alg = "greedy"
-results_dir = "./results/30/greedy"
+alg = "delay"
+results_dir = "./results/30/delay_150"
 power_threshold = 150 # watts
-process_maxwait = 60 * 2 # seconds
+process_maxwait = 60 * 60 * 24 # seconds
 co2_intensity_threshold = 20 
 
 def main():

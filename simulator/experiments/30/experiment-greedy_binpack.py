@@ -14,17 +14,15 @@ log_file = "log_2.csv"
 
 alg = "greedy_binpack"
 results_dir = "./results/30/greedy_binpack"
-timepool_power_threshold = 100 # watts
-timepool_process_maxwait = 60 * 60 * 24 # 24 hours
-pool_size = 50
-pool_alg = "mean"
+power_threshold = 70 # watts
+process_maxwait = 60 * 60 * 24 # 24 hours
+co2_intensity_threshold = 20 
 
 def main():
     simulator = Simulator(alg,
-                          timepool_power_threshold,
-                          timepool_process_maxwait,
-                          pool_size, 
-                          pool_alg,
+                          power_threshold,
+                          process_maxwait,
+                          co2_intensity_threshold,
                           max_processes,
                           max_days,
                           cluster_utilization_threshold, 

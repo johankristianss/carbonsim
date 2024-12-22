@@ -48,8 +48,10 @@ class Process:
 
     def tick(self):
         self.__timestep += 1
-        # if self.__timestep not in self.__power_draw_W_dict:
-        #     return True
+        if self.__timestep not in self.__power_draw_W_dict:
+            print("timestep", self.__timestep, "not in power_draw_W_dict")
+            print("Process", self.__name, "has finished")
+            return True
        
         exectime = self.total_length_seconds
         remaining_time = exectime - self.__timestep
@@ -58,12 +60,13 @@ class Process:
         #    print("Process", self.__name, "remaining time:", remaining_time)
 
         if remaining_time <= 0:
-            #print("XXXXXXXXXXXXXXXXXXXXXXXXX Process", self.__name, "has finished")
+            print("Process", self.__name, "has finished")
             return True
 
         self.__duration += 1
 
         current_energy = self.__power_draw_W_dict.get(self.__timestep, 0.0) / 3600.0
+
         self.__current_gpu_utilization = self.__utilization_gpu_pct_dict.get(self.__timestep, 0.0)
         self.__current_memory_utilization = self.__utilization_memory_pct_dict.get(self.__timestep, 0.0)
         
@@ -74,6 +77,8 @@ class Process:
             self.__cumulative_energy += current_energy
 
         self.__previous_energy = current_energy
+
+        #print("Process", self.__name, "energy:", current_energy, "carbon intensity:", self.__current_carbon_intensity, "emission:", current_energy * self.__current_carbon_intensity, "cumulative emission:", self.__cumulative_emission)
 
         self.__emission = current_energy * self.__current_carbon_intensity
         self.__cumulative_emission += self.__emission
