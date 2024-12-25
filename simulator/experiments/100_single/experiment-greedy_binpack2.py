@@ -13,8 +13,8 @@ log_dir = "./logs/100"
 log_file = "log_2.csv"
 
 alg = "greedy_binpack"
-results_dir = "./results/100_single/greedy_binpack"
-power_threshold = 70 # watts
+results_dir = "./results/100_single/greedy_binpack2"
+power_threshold = 60 # watts
 process_maxwait = 60 * 60 * 24 # 24 hours
 co2_intensity_threshold = 20 
 

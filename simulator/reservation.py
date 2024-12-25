@@ -5,25 +5,39 @@ import os
 import math
 import pandas as pd
 import json
-from time import time 
-from bisect import bisect_left
-    
+
+# def available_gpus_at_tick(start, end, processesStatus):
+#     reserved_gpus = 0
+#     processStartTimes = processesStatus["start_times"]
+#     processEndTimes = processesStatus["end_times"]
+#     total_gpus = processesStatus["total_gpus"]
+#
+#     for i in range(len(processStartTimes)):
+#         process_start_time = processStartTimes[i]
+#         process_end_time = processEndTimes[i]
+#
+#         #if not (end <= process_start_time or start >= process_end_time):
+#         if not (end < process_start_time or start > process_end_time):
+#              reserved_gpus += 1
+#              if reserved_gpus >= total_gpus:
+#                  return False
+#     return True
+
 def available_gpus_at_tick(start, end, processesStatus):
     reserved_gpus = 0
-
     processStartTimes = processesStatus["start_times"]
-    processEndTimes = processesStatus["end_times"]
-    total_gpus = processesStatus["total_gpus"]
+    processEndTimes   = processesStatus["end_times"]
+    total_gpus        = processesStatus["total_gpus"]
 
     for i in range(len(processStartTimes)):
-        process_start_time = processStartTimes[i]
-        process_end_time = processEndTimes[i]
+        p_start = processStartTimes[i]
+        p_end   = processEndTimes[i]
 
-        if not (end <= process_start_time or start >= process_end_time):
+        if not (end < p_start or start > p_end):
             reserved_gpus += 1
-            if total_gpus - reserved_gpus <= 0:
-                #print(f"No GPU available between [{start}, {end})")
+            if reserved_gpus >= total_gpus:
                 return False
+
     return True
 
 class Reservation:
@@ -55,30 +69,50 @@ class Reservation:
         with open(filename, 'w') as f:
             f.write(json.dumps(j))
 
+    def calculate_benefit_s(self, process, cluster_name, tick):
+        start_time = tick
+        end_time = tick + process.total_length_seconds
+        co2_benefit = 0
+
+        cluster = self.edgeclusters[cluster_name]
+
+        #print(f"Calculating benefit for process {process.name} on cluster {cluster_name} at tick {tick} with length {process.total_length_seconds}s")
+
+        for t in range(start_time, end_time):
+            co2_benefit += cluster.carbon_intensity_future(t - self.t)
+
+        return co2_benefit
+    
     def calculate_benefit(self, process, cluster_name, tick):
-        #start_time = tick
-        #end_time = tick + process.total_length_seconds
-        #co2_benefit = 0
+        start_time = tick
+        end_time = tick + process.total_length_seconds
+    
+        # Switch to 5-minute resolution
+        start_interval = start_time // 300  # 300 seconds = 5 minutes
+        end_interval = (end_time + 299) // 300  # Ensure full coverage
+        co2_benefit = 0
+    
+        cluster = self.edgeclusters[cluster_name]
+    
+        for interval in range(start_interval, end_interval):
+            t = interval * 300  # Convert interval to seconds
+            co2_benefit += cluster.carbon_intensity_future(t - self.t) * 300
+    
+        return co2_benefit
+    
+    def find_smallest_benefit(self, possible_assignments):
+        if not possible_assignments:
+            return None 
 
-        # for t in range(start_time, end_time):
-        #     co2_benefit += self.edgeclusters[cluster_name].carbon_intensity_future(t - self.t)
-
-        #return co2_benefit # * process.total_length_seconds * process.power_draw_mean
-        return self.edgeclusters[cluster_name].carbon_intensity_future(tick) #* process.power_draw_mean
+        smallest_benefit_assignment = min(possible_assignments, key=lambda x: x[0])
+        return smallest_benefit_assignment
 
     def add_process(self, process):
-        # if process.name == "p_205":
-        #     debug = True
-        #     self.dump_json("layout.json")
-        #     os._exit(1)
-        # else:
-        #     debug = False
-
         print("Adding process:", process.name, "Deadline:", process.deadline, "Length:", process.total_length_seconds)
         deadline_ticks = process.deadline
         forecast_ticks = range(self.t, self.t + deadline_ticks, 1)
-
-        #print("Forecast ticks:", forecast_ticks)
+       
+        margin = 5
 
         possible_assignments = []
         processStatus = {}
@@ -87,37 +121,38 @@ class Reservation:
             processes = self.reservation[cluster_name]
 
             processStatus[cluster_name]["start_times"] = [p.planned_start_time for p in processes]
-            processStatus[cluster_name]["end_times"] = [p.planned_start_time + p.total_length_seconds for p in processes]
+            processStatus[cluster_name]["end_times"] = [p.planned_start_time + p.total_length_seconds + margin for p in processes]
             processStatus[cluster_name]["total_gpus"] = self.edgeclusters[cluster_name].gpus
 
         for tick in forecast_ticks:
             for cluster_name in self.edgeclusters.keys():
-                available_gpus = available_gpus_at_tick(tick, tick + process.total_length_seconds, processStatus[cluster_name])
+                available_gpus = available_gpus_at_tick(tick, tick + process.total_length_seconds + margin, processStatus[cluster_name])
 
                 if available_gpus:
                     benefit = self.calculate_benefit(process, cluster_name, tick)
                     possible_assignments.append((benefit, cluster_name, tick))
 
-        # Sort assignments by tick (ascending) and benefit (descending)
-        #possible_assignments.sort(key=lambda x: (x[2], -x[0]))
-        #print("Possible assignments:", possible_assignments)
-        # Sort assignments by highest benefit and spread start times
-
-        possible_assignments.sort(reverse=False, key=lambda x: x[0])
+        ##possible_assignments.sort(reverse=False, key=lambda x: x[0])
 
         # for i in range(len(possible_assignments)):
-        #      print(f"Benefit: {possible_assignments[i][0]: .2f}, Cluster: {possible_assignments[i][1]}, Tick: {possible_assignments[i][2]}")
+        #     print(f"Benefit: {possible_assignments[i][0]: .2f}, Cluster: {possible_assignments[i][1]}, Tick: {possible_assignments[i][2]}")
+        #
 
         if len(possible_assignments) == 0:
             print(f"Unable to schedule process {process.name} within its deadline using bin-packing.")
             return False
 
-        # Pick the best assignment
-        best_benefit, best_cluster_name, best_tick = possible_assignments[0]
-        process.planned_start_time = best_tick + 1  # +1 we cannot start at the same tick
+        best_assignment = self.find_smallest_benefit(possible_assignments)
+
+        if best_assignment is None:
+            print(f"Unable to schedule process {process.name} within its deadline using bin-packing.")
+            return False
+
+        best_benefit, best_cluster_name, best_tick = best_assignment
+
+        process.planned_start_time = best_tick
         process.planned_cluster_name = best_cluster_name
         self.reservation[best_cluster_name].append(process)
-    
         estimated_co2_at_start_time = self.edgeclusters[process.planned_cluster_name].carbon_intensity_future(process.planned_start_time)
     
         print(f"{self.t}: Assigned {process.name} with length {process.total_length_seconds}s to {best_cluster_name} cluster at tick {best_tick} with benefit{best_benefit: .2f}.", f"Estimated CO2 intensity at start time:{estimated_co2_at_start_time: .2f} gCO2/kWh.")

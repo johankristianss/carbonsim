@@ -8,15 +8,15 @@ max_days = 2000
 cluster_utilization_threshold = 1.0
 workload_dir = "./filtered_workloads_1s"
 workloads_stats_dir = "./filtered_workloads_1s_stats"
-cluster_config = "./edge-clusters-single.json"
+cluster_config = "./edge-clusters-small.json"
 log_dir = "./logs/100"
 log_file = "log_2.csv"
 
-alg = "greedy_binpack"
-results_dir = "./results/100_single/greedy_binpack"
-power_threshold = 70 # watts
-process_maxwait = 60 * 60 * 24 # 24 hours
-co2_intensity_threshold = 20 
+alg = "reservation"
+results_dir = "./results/100_small/reservation_6"
+power_threshold = 150 # watts
+process_maxwait = 60 * 60 * 6 # seconds
+co2_intensity_threshold = 160
 
 def main():
     simulator = Simulator(alg,

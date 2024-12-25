@@ -16,7 +16,7 @@ alg = "reservation"
 results_dir = "./results/30/reservation_24"
 power_threshold = 150 # watts
 process_maxwait = 60 * 60 * 24 # seconds
-co2_intensity_threshold = 160
+co2_intensity_threshold = 20 
 
 def main():
     simulator = Simulator(alg,

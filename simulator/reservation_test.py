@@ -7,10 +7,10 @@ from reservation import *
 class TestReservation(unittest.TestCase):
     def test_scheduler(self):
         edgeclusters = {}
-        edge_cluster = EdgeCluster("Umea", 1, 1, "../carbon_1s_30d/SE-SE1.csv", 0.001101, 1.0, "./test_output/umea.csv")
+        #edge_cluster = EdgeCluster("Umea", 1, 1, "../carbon_1s_30d/SE-SE1.csv", 0.001101, 1.0, "./test_output/umea.csv")
+        #edgeclusters[edge_cluster.name] = edge_cluster
+        edge_cluster = EdgeCluster("London", 1, 1, "../carbon_1s_30d/GB.csv", 0.001101, 1.0, "./test_output/stockholm.csv")
         edgeclusters[edge_cluster.name] = edge_cluster
-        # edge_cluster = EdgeCluster("London", 1, 1, "../carbon_1s_30d/GB.csv", 0.001101, 1.0, "./test_output/stockholm.csv")
-        # edgeclusters[edge_cluster.name] = edge_cluster
         #edge_cluster = EdgeCluster("Warsaw", 1, 1, "../carbon_1s_30d/PL.csv", 0.001101, 1.0, "./test_output/stockholm.csv")
         edgeclusters[edge_cluster.name] = edge_cluster
 

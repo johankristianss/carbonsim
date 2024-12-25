@@ -8,13 +8,13 @@ max_days = 2000
 cluster_utilization_threshold = 1.0
 workload_dir = "./filtered_workloads_1s"
 workloads_stats_dir = "./filtered_workloads_1s_stats"
-cluster_config = "./edge-clusters-single.json"
-log_dir = "./logs/100"
+cluster_config = "./edge-clusters-small.json"
+log_dir = "./logs/30"
 log_file = "log_2.csv"
 
 alg = "greedy_binpack"
-results_dir = "./results/100_single/greedy_binpack"
-power_threshold = 70 # watts
+results_dir = "./results/30/greedy_binpack2"
+power_threshold = 60 # watts
 process_maxwait = 60 * 60 * 24 # 24 hours
 co2_intensity_threshold = 20 
 
