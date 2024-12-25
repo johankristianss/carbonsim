@@ -354,6 +354,7 @@ class Scheduler:
         #     self.background()
             
         #self.tick_count += 1
+        self.background()
         
         self.__genetic_pool.tick()
         self.__greedy_binpack_pool.tick()
@@ -361,7 +362,6 @@ class Scheduler:
         self.__reservation.tick()
         self.__timepacking.tick()
         
-        self.background()
         
     @property
     def num_edge_clusters(self):

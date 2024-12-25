@@ -98,7 +98,8 @@ class Reservation:
             t = interval * 300  # Convert interval to seconds
             co2_benefit += cluster.carbon_intensity_future(t - self.t) * 300
     
-        return co2_benefit
+        #return co2_benefit
+        return co2_benefit * process.power_draw_mean
     
     def find_smallest_benefit(self, possible_assignments):
         if not possible_assignments:

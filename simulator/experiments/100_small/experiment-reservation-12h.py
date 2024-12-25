@@ -12,11 +12,11 @@ cluster_config = "./edge-clusters-small.json"
 log_dir = "./logs/100"
 log_file = "log_2.csv"
 
-alg = "greedy_binpack"
-results_dir = "./results/100_small/greedy_binpack2"
-power_threshold = 60 # watts
-process_maxwait = 60 * 60 * 24 # 24 hours
-co2_intensity_threshold = 20 
+alg = "reservation"
+results_dir = "./results/100_small/reservation_12"
+power_threshold = 150 # watts
+process_maxwait = 60 * 60 * 12 # seconds
+co2_intensity_threshold = 160
 
 def main():
     simulator = Simulator(alg,
