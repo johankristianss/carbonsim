@@ -24,6 +24,7 @@ class Process:
         self.__utilization_memory_pct_dict = {}
         self.__planned_start_time = 0
         self.__planned_cluster_name = None
+        self.__predicted_energy = 0.0
 
         with open(self.__workload_csv_file, mode='r') as csvfile:
             csvreader = csv.DictReader(csvfile)
@@ -177,3 +178,11 @@ class Process:
     @planned_cluster_name.setter
     def planned_cluster_name(self, value):
         self.__planned_cluster_name = value
+
+    @property
+    def predicted_energy(self):
+        return self.__predicted_energy
+
+    @predicted_energy.setter
+    def predicted_energy(self, value):
+        self.__predicted_energy = value
