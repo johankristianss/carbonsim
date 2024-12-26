@@ -1,4 +1,5 @@
 import csv
+import os
 
 from stats import get_process_power_draw_stat
 
@@ -56,11 +57,12 @@ class Process:
         exectime = self.total_length_seconds
         remaining_time = exectime - self.__timestep
 
+
         #if self.__name == "p_166":
         #    print("Process", self.__name, "remaining time:", remaining_time)
 
         if remaining_time <= 0:
-            print("Process", self.__name, "has finished")
+            #print("total_length_seconds", self.total_length_seconds, "timestep", self.__timestep, "exectime", exectime, "remaining_time", remaining_time, "Process", self.__name, "energy:", self.__current_energy, "carbon intensity:", self.__current_carbon_intensity, "emission:", self.__emission, "cumulative emission:", self.__cumulative_emission)
             return True
 
         self.__duration += 1

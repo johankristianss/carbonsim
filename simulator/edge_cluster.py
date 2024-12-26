@@ -70,6 +70,7 @@ class EdgeCluster:
 
 
     def run(self, process):
+        print("Available GPUs: {}".format(self.available_gpus))
         #if self.utilization > self.__utilization_threshold:
            # print(f'EdgeCluster <{self.__name}> is at full capacity due to throttling, rejecting process <{process.name}>')
         #    return False

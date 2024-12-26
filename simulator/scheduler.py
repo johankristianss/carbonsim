@@ -203,7 +203,7 @@ class Scheduler:
                     for self.__edge_cluster in self.__edge_clusters_dict.values():
                         self.__edge_cluster.print_status()
 
-                    self.__reservation.dump_json("p100_error.json")
+                    self.__reservation.dump_json("error.json")
                     os._exit(1)
 
             # if self.tick_count == 14616:
@@ -263,16 +263,7 @@ class Scheduler:
             self.__reservation.remove_process(process.name)
          
     def run(self, process):
-        if self.__alg == 'genetic_timepool':
-            print("----------------------- genetic time pool scheduling -----------------------")
-            if self.__genetic_timepool.add_process(process) == False:
-                print("genetic_timepool.add_process failed")
-                return False
-         
-            self.__scheduled_processs += 1
-            return True
-
-        elif self.__alg == 'greedy':
+        if self.__alg == 'greedy':
             print("----------------------- greedy scheduling -----------------------")
             ############# greedy scheduling ############
             available_edge_clusters = [edge_cluster for edge_cluster in self.__edge_clusters_dict.values() if edge_cluster.available]
@@ -281,10 +272,13 @@ class Scheduler:
 
             available_edge_clusters.sort(key=lambda edge_cluster: edge_cluster.carbon_intensity)
 
-            selected_edge_cluster = available_edge_clusters[0]
-            self.__scheduled_processs += 1
-            return selected_edge_cluster.run(process)
-        
+            for edge_cluster in available_edge_clusters:
+                if edge_cluster.run(process):
+                    print("selected edge cluster: ", edge_cluster.name)
+                    self.__scheduled_processs += 1
+                    return True
+       
+            return False
         elif self.__alg == 'greedy_binpack':
             print("----------------------- greedy bin packing scheduling -----------------------")
             ############# greedy bin packing scheduling ############
