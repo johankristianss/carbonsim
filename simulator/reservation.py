@@ -14,19 +14,13 @@ def available_gpus_at_tick(start, end, processesStatus):
         if not (end < p_start or start > p_end):
             reserved_gpus += 1
             if reserved_gpus >= total_gpus:
-                return False
+                return False, total_gpus - reserved_gpus
 
-    return True
+    return True, total_gpus - reserved_gpus
 
 def find_processes_at_tick(tick, processesStatus):
-    """
-    Return a list of process references that are active at time `tick`.
-    We'll assume inclusive intervals: a process is active if
-    start_time <= tick <= end_time.
-    """
     active_processes = []
 
-    # Retrieve the parallel lists
     starts    = processesStatus["start_times"]
     ends      = processesStatus["end_times"]
     processes = processesStatus["processes"]  # references to the actual Process objects
@@ -36,22 +30,6 @@ def find_processes_at_tick(tick, processesStatus):
             active_processes.append(processes[i])
 
     return active_processes
-
-def find_processes_about_to_start(tick, processesStatus, threshold=10):
-    """
-    Return a list of process references that are scheduled to start 
-    between [tick, tick + threshold] (inclusive by default).
-    """
-    starts    = processesStatus["start_times"]
-    ends      = processesStatus["end_times"]     # Not used here, but available
-    processes = processesStatus["processes"]     # references to the actual Process objects
-
-    about_to_start = []
-    for i, p_start in enumerate(starts):
-        if tick <= p_start <= tick + threshold:
-            about_to_start.append(processes[i])
-
-    return about_to_start
 
 class Reservation:
     def __init__(self):
@@ -120,12 +98,18 @@ class Reservation:
         smallest_benefit_assignment = min(possible_assignments, key=lambda x: x[0])
         return smallest_benefit_assignment
     
+    def find_next_timeslot(self, possible_assignments):
+        if not possible_assignments:
+            return None 
+
+        smallest_benefit_assignment = min(possible_assignments, key=lambda x: x[2])
+        return smallest_benefit_assignment
+    
     def add_process(self, process):
-        # if process.power_draw_mean < 100:
-        #     # sort 
-        #     available_edge_clusters.sort(key=lambda edge_cluster: edge_cluster.carbon_intensity)
-
-
+        # max_deadline_seconds = 24 * 60 * 60 # Normalize the deadline to a range between 0 and max_deadline_seconds normalized_deadline = process.total_power_consumption %
+        # normalized_deadline = process.total_power_consumption % max_deadline_seconds 
+        # process.deadline = normalized_deadline
+        #
         print("Adding process:", process.name, "Deadline:", process.deadline, "Length:", process.total_length_seconds)
         deadline_ticks = process.deadline
         forecast_ticks = range(self.t, self.t + deadline_ticks, 1)
@@ -142,23 +126,31 @@ class Reservation:
             processStatus[cluster_name]["end_times"] = [p.planned_start_time + p.total_length_seconds + margin for p in processes]
             processStatus[cluster_name]["total_gpus"] = self.edgeclusters[cluster_name].gpus
 
+        timepacking = False
         for tick in forecast_ticks:
             for cluster_name in self.edgeclusters.keys():
-                available_gpus = available_gpus_at_tick(tick, tick + process.total_length_seconds + margin, processStatus[cluster_name])
+                available_gpus, gpus = available_gpus_at_tick(tick, tick + process.total_length_seconds + margin, processStatus[cluster_name])
+                #print(f"Cluster: {cluster_name}, Tick: {tick}, Available GPUs: {available_gpus}, GPUs: {gpus}")
 
                 if available_gpus:
                     energy = self.calculate_energy(process, cluster_name, tick)
                     possible_assignments.append((energy, cluster_name, tick))
+                else:
+                    timepacking = True
 
-
+        
         # sort by energy, reverse order = False
         #possible_assignments.sort(key=lambda x: x[0], reverse=False)
 
-        # for i in range(len(possible_assignments)):
-        #     print(f"Benefit: {possible_assignments[i][0]: .2f}, Cluster: {possible_assignments[i][1]}, Tick: {possible_assignments[i][2]}")
+        timepacking = True 
 
-        print("Length of possible assignments:", len(possible_assignments))
-        best_assignment = self.find_smallest_energy(possible_assignments)
+        if timepacking:
+            best_assignment = self.find_next_timeslot(possible_assignments)
+        else:
+            best_assignment = self.find_smallest_energy(possible_assignments)
+        
+        # for i in range(len(possible_assignments)):
+        #      print(f"Benefit: {possible_assignments[i][0]: .2f}, Cluster: {possible_assignments[i][1]}, Tick: {possible_assignments[i][2]}")
 
         if best_assignment is None:
             print(f"Unable to schedule process {process.name} within its deadline using bin-packing.")
@@ -166,22 +158,24 @@ class Reservation:
 
         energy, best_cluster_name, best_tick = best_assignment
 
-        if best_cluster_name == "Warsaw":
-            print("Forecasts:", forecast_ticks)
-            print("Process:", process.name, "Deadline:", process.deadline, "Length:", process.total_length_seconds)
-            print("Length of possible assignments:", len(possible_assignments))
-            print("Best assignment:", best_assignment)
-        
-            counter = 0
-            for best_assignment in possible_assignments:
-                print(best_assignment)
-                counter += 1
-                if  counter > 10:
-                    break
-
-            self.dump_json("debug.json")
-
-            os._exit(1)
+        # if process.name == "p_0":
+        # if best_cluster_name == "Warsaw":
+        #     print("Current tick:", self.t)
+        #     print("Forecasts:", forecast_ticks)
+        #     print("Process:", process.name, "Deadline:", process.deadline, "Length:", process.total_length_seconds)
+        #     print("Length of possible assignments:", len(possible_assignments))
+        #     print("Best assignment:", best_assignment)
+        #
+        #     counter = 0
+        #     for best_assignment in possible_assignments:
+        #         print(best_assignment)
+        #         counter += 1
+        #         if  counter > 10:
+        #             break
+        #
+        #     self.dump_json("debug.json")
+        #
+        #     os._exit(1)
 
 
         print(best_cluster_name, best_tick, energy)

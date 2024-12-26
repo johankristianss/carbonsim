@@ -1,4 +1,4 @@
-class GreedyBinpackPool:
+class PriorityPool:
     def __init__(self, power_threshold=100):
         self.power_threshold = power_threshold
         self.pool = []
@@ -17,31 +17,6 @@ class GreedyBinpackPool:
             if process.name == process_name:
                 self.pool.remove(process)
 
-    # def select_processes(self):
-    #     highenergy_processes = []
-    #     lowenergy_processes = []
-    #     must_run_processes = []
-    #     
-    #     if len(self.pool) == 0:
-    #         return highenergy_processes, lowenergy_processes, must_run_processes
-    #    
-    #     for process in self.pool:
-    #         if process.deadline <= 0:
-    #             must_run_processes.append(process)
-    #         else:
-    #             if process.total_power_consumption > 0.15 * 1e7:
-    #                 highenergy_processes.append(process)
-    #             else:
-    #                 lowenergy_processes.append(process)
-    #
-    #     lowenergy_processes.sort(key=lambda x: x.total_power_consumption, reverse=True)
-    #     highenergy_processes.sort(key=lambda x: x.total_power_consumption, reverse=True)
-    #
-    #     #higheffect_processes.sort(key=lambda x: x.power_draw_mean, reverse=True)
-    #     #loweffect_processes.sort(key=lambda x: x.power_draw_mean, reverse=True)
-    #
-    #     return highenergy_processes, lowenergy_processes, must_run_processes
-   
     def print_pool(self):
         print("------------------------------------ pool ------------------------------------")
         for process in self.pool:

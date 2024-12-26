@@ -5,7 +5,6 @@ from simulator import Simulator
 
 max_processes = 10000
 max_days = 2000 
-cluster_utilization_threshold = 1.0
 workload_dir = "./filtered_workloads_1s"
 workloads_stats_dir = "./filtered_workloads_1s_stats"
 cluster_config = "./edge-clusters-single.json"
@@ -25,7 +24,6 @@ def main():
                           co2_intensity_threshold,
                           max_processes,
                           max_days,
-                          cluster_utilization_threshold, 
                           log_dir,
                           log_file,
                           workload_dir, 

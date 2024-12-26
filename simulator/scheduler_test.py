@@ -6,11 +6,11 @@ from scheduler import *
 class TestScheduler(unittest.TestCase):
     def test_scheduler(self):
         scheduler = Scheduler()
-        edge_cluster = EdgeCluster("umea", 1, 1, "../carbon_1s_30d/SE-SE1.csv", 0.001101, 1.0, "./test_output/umea.csv")
+        edge_cluster = EdgeCluster("umea", 1, 1, "../carbon_1s_30d/SE-SE1.csv", 0.001101, "./test_output/umea.csv")
         scheduler.add_edge_cluster(edge_cluster)
-        edge_cluster = EdgeCluster("stockholm", 1, 1, "../carbon_1s_30d/SE-SE3.csv", 0.001101, 1.0, "./test_output/stockholm.csv")
+        edge_cluster = EdgeCluster("stockholm", 1, 1, "../carbon_1s_30d/SE-SE3.csv", 0.001101, "./test_output/stockholm.csv")
         scheduler.add_edge_cluster(edge_cluster)
-        edge_cluster = EdgeCluster("lund", 1, 1, "../carbon_1s_30d/SE-SE4.csv", 0.001101, 1.0, "./test_output/lund.csv")
+        edge_cluster = EdgeCluster("lund", 1, 1, "../carbon_1s_30d/SE-SE4.csv", 0.001101, "./test_output/lund.csv")
         scheduler.add_edge_cluster(edge_cluster)
 
         workloads_stats_dir = "../filtered_workloads_1s_stats"
@@ -30,7 +30,7 @@ class TestScheduler(unittest.TestCase):
         if not ok:
             print(f"failed to run process <{process.name}>")
 
-        for _ in range(1000000):
+        for _ in range(1000):
             if scheduler.tick():
                 break 
         

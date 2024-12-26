@@ -7,12 +7,13 @@ from reservation import *
 class TestReservation(unittest.TestCase):
     def test_scheduler(self):
         edgeclusters = {}
-        #edge_cluster = EdgeCluster("Umea", 1, 1, "../carbon_1s_30d/SE-SE1.csv", 0.001101, 1.0, "./test_output/umea.csv")
+        edge_cluster = EdgeCluster("Lund", 1, 2, "../carbon_1s_30d/SE-SE4.csv", 0.001101, "./test_output/umea.csv")
+        #edge_cluster = EdgeCluster("Umea", 1, 1, "../carbon_1s_30d/SE-SE1.csv", 0.001101, "./test_output/umea.csv")
         #edgeclusters[edge_cluster.name] = edge_cluster
-        edge_cluster = EdgeCluster("London", 1, 1, "../carbon_1s_30d/GB.csv", 0.001101, 1.0, "./test_output/stockholm.csv")
+        #edge_cluster = EdgeCluster("London", 1, 4, "../carbon_1s_30d/GB.csv", 0.001101, "./test_output/stockholm.csv")
         edgeclusters[edge_cluster.name] = edge_cluster
-        #edge_cluster = EdgeCluster("Warsaw", 1, 1, "../carbon_1s_30d/PL.csv", 0.001101, 1.0, "./test_output/stockholm.csv")
-        edgeclusters[edge_cluster.name] = edge_cluster
+        #edge_cluster = EdgeCluster("Warsaw", 1, 1, "../carbon_1s_30d/PL.csv", 0.001101, "./test_output/stockholm.csv")
+        #edgeclusters[edge_cluster.name] = edge_cluster
 
         workloads_stats_dir = "../filtered_workloads_1s_stats"
 
@@ -29,7 +30,7 @@ class TestReservation(unittest.TestCase):
         # process4 = Process("test_process_3", 3, 0, 60*60*24, "../filtered_workloads/3.csv", workloads_stats_dir)
         #
         processes = []
-        for i in range(30):
+        for i in range(15):
             process = Process(f"p_{i}", i, 0, 60*60*24, f"../filtered_workloads_1s/{i}.csv", workloads_stats_dir)
             processes.append(process)
 

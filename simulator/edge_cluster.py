@@ -2,7 +2,7 @@ import csv
 import json
 
 class EdgeCluster:
-    def __init__(self, name, nodes, gpu_per_node, carbon_csv_file, cost, utilization_threshold, result_csv_filename):
+    def __init__(self, name, nodes, gpu_per_node, carbon_csv_file, cost, result_csv_filename):
         self.__name = name
         self.__nodes = nodes
         self.__gpu_per_node = gpu_per_node
@@ -18,7 +18,6 @@ class EdgeCluster:
         self.__total_processing_time = 0
         self.__finsihed_processes = 0
         self.__total_processes = 0
-        self.__utilization_threshold = utilization_threshold 
 
         with open(carbon_csv_file, mode='r') as csvfile:
             csvreader = csv.DictReader(csvfile)
@@ -42,11 +41,7 @@ class EdgeCluster:
 
     @classmethod
     def empty(cls):
-        """
-        Creates an empty instance of EdgeCluster without reading from disk.
-        """
         instance = cls.__new__(cls)  # Create an uninitialized instance
-        # Initialize only the required attributes
         instance.__name = None
         instance.__nodes = 0
         instance.__gpu_per_node = 0
@@ -62,7 +57,6 @@ class EdgeCluster:
         instance.__total_processing_time = 0
         instance.__finsihed_processes = 0
         instance.__total_processes = 0
-        instance.__utilization_threshold = 0.0
         instance.__result_csv_filename = None
         instance.__result_csvfile = None
         instance.__results_writer = None
@@ -71,21 +65,15 @@ class EdgeCluster:
 
     def run(self, process):
         print("Available GPUs: {}".format(self.available_gpus))
-        #if self.utilization > self.__utilization_threshold:
-           # print(f'EdgeCluster <{self.__name}> is at full capacity due to throttling, rejecting process <{process.name}>')
-        #    return False
         if self.available:
             self.__total_processes += 1
             self.__processes.append(process)
             return True
-        #else:
-        #    print(f'EdgeCluster <{self.__name}> is at full capacity, rejecting process <{process.name}>')
         
         return False
 
     def tick(self):
         current_carbon_intensity = self.__carbon_intensity_dict.get(self.__timestep, 0.0)
-        # print(f'EdgeCluster <{self.__name}> timestep {self.__timestep} with carbon intensity {current_carbon_intensity}')
 
         total_gpu_utilization = 0.0
         total_memory_utilization = 0.0
@@ -93,10 +81,8 @@ class EdgeCluster:
             process.carbon_intensity = current_carbon_intensity
             if process.tick():
                 print(f'Process <{process.name}> finished at timestep {self.__timestep}')
-                # print available GPUs
                 self.__processes.remove(process)  
                 self.__finsihed_processes += 1
-                #print(f'Available GPUs: {self.available_gpus}')
                 self.__scheduler.process_completed(process)
                 continue 
 
@@ -107,12 +93,6 @@ class EdgeCluster:
             total_gpu_utilization += process.gpu_utilization
             total_memory_utilization += process.memory_utilization
             
-            # print edge cluster name and utilization
-            # print(f'EdgeCluster <{self.__name}> utilization: {self.utilization}')
-
-        # generate a semicolmn separated string of all processes running
-        #processes = ';'.join([process.name for process in self.__processes])
-
         processes_array = []
         for process in self.__processes:
             process_dict = {}
@@ -176,7 +156,6 @@ class EdgeCluster:
     def gpus(self):
         return self.__gpus
 
-    # setter for gpus
     @gpus.setter
     def gpus(self, gpus):
         self.__gpus = gpus

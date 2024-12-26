@@ -13,7 +13,6 @@ class Simulator:
                  co2_intensity_threshold,
                  max_processes,
                  max_days,
-                 cluster_utilization_threshold,
                  log_file_dir,
                  log_file,
                  workload_dir,
@@ -23,7 +22,6 @@ class Simulator:
         self.__workload_dir = workload_dir
         self.__workloads_stats_dir = workloads_stats_dir
         self.__cluster_config = cluster_config
-        self.__cluster_utilization_threshold = cluster_utilization_threshold
         self.__log_file_dir = log_file_dir
         self.__log_file = log_file
         self.__max_processes = max_processes
@@ -104,7 +102,6 @@ class Simulator:
                 cluster_data['gpus_per_node'],
                 cluster_data['carbon-intensity-trace'],
                 cluster_data['gpu_cost_euro_per_second'],
-                self.__cluster_utilization_threshold,
                 self.result_dir + "/" + cluster_data['name'] + ".csv"
             )
             self.scheduler.add_edge_cluster(edge_cluster)

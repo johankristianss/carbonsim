@@ -1,16 +1,10 @@
 import random
 import csv
-from stats import get_process_power_draw_stat
 import os
 import sys
 sys.path.append('/home/johan/dev/github/johankristianss/carbonsim/simulator/genetic')
-from genetic_pool import GeneticPool
-from greedy_binpack_pool import GreedyBinpackPool
-from delay_pool import DelayPool
+from priority_pool import PriorityPool
 from reservation import Reservation
-from timepacking import TimePacking
-import pandas as pd
-import math
 import os
 
 class Scheduler:
@@ -24,12 +18,9 @@ class Scheduler:
         self.workloads_stats_dir = workloads_stats_dir
         self.__c02_intensity_threshold = co2_intensity_threshold
         self.__alg = alg
-        self.__genetic_pool = GeneticPool(workloads_stats_dir)
         self.__power_threshold = power_threshold
-        self.__greedy_binpack_pool = GreedyBinpackPool(power_threshold=self.__power_threshold)
-        self.__delay_pool = DelayPool()
+        self.__priority_pool = PriorityPool(power_threshold=self.__power_threshold)
         self.__reservation = Reservation()
-        self.__timepacking = TimePacking()
 
         self.average_utilization_sum = 0
         self.__scheduled_processs = 0
@@ -40,21 +31,11 @@ class Scheduler:
 
     def start(self):
         self.__reservation.set_edgeclusters(self.__edge_clusters_dict)
-        self.__timepacking.set_edgeclusters(self.__edge_clusters_dict)
 
     def finalize(self):
         if self.__alg == 'reservation':
             if self.__reservation.planned_processes() > 0:
                 self.__reservation.print()
-                return False
-            else:
-                return True
-        elif self.__alg == 'timepacking':
-            if self.__timepacking.planned_processes() > 0:
-                return False
-            return True
-        elif self.__alg == 'delay':
-            if self.__delay_pool.size() > 0:
                 return False
             else:
                 return True
@@ -66,14 +47,9 @@ class Scheduler:
 
         if self.__alg == 'greedy_binpack':
             #print("------------------------------- greedy_binpack background -------------------------------")
-            high_effect_processes, low_effect_processes, must_run_processes = self.__greedy_binpack_pool.select_processes()
+            high_effect_processes, low_effect_processes, must_run_processes = self.__priority_pool.select_processes()
             #self.__greedy_binpack_pool.print_pool()
 
-            # print("high_effect_processes: ", len(high_effect_processes))
-            # print("low_effect_processes: ", len(low_effect_processes))
-            # print("must_run_processes: ", len(must_run_processes))
-            #
-            # print("processing must run processes")
             for process in must_run_processes:
                 available_edge_clusters = [edge_cluster for edge_cluster in self.__edge_clusters_dict.values() if edge_cluster.available]
 
@@ -82,7 +58,7 @@ class Scheduler:
                     selected_edge_cluster = available_edge_clusters[0]
                     print("selected edge cluster: ", selected_edge_cluster.name)
                     if selected_edge_cluster.run(process):
-                        self.__greedy_binpack_pool.remove_process(process.name)
+                        self.__priority_pool.remove_process(process.name)
 
             for process in high_effect_processes:
                 available_edge_clusters = [edge_cluster for edge_cluster in self.__edge_clusters_dict.values() if edge_cluster.available]
@@ -92,7 +68,7 @@ class Scheduler:
                     selected_edge_cluster = available_edge_clusters[0]
                     print("selected edge cluster: ", selected_edge_cluster.name)
                     if selected_edge_cluster.run(process):
-                        self.__greedy_binpack_pool.remove_process(process.name)
+                        self.__priority_pool.remove_process(process.name)
                     else:
                         print("failed to run process, no available gpus")
                 else:
@@ -106,97 +82,23 @@ class Scheduler:
                     selected_edge_cluster = available_edge_clusters[0]
 
                     if selected_edge_cluster.run(process):
-                        self.__greedy_binpack_pool.remove_process(process.name)
+                        self.__priority_pool.remove_process(process.name)
 
                 # print pool size left after scheduling
             print("process not scheduled: ")
-            self.__greedy_binpack_pool.print_pool()
-        
-        if self.__alg == 'delay':
-            #print("------------------------------- delay background -------------------------------")
-            selected_processes, must_run_processes = self.__delay_pool.select_processes()
-
-            #self.__delay_pool.print_pool()
-
-            # these processes must run now immediately
-            for process in must_run_processes:
-                available_edge_clusters = [edge_cluster for edge_cluster in self.__edge_clusters_dict.values() if edge_cluster.available]
-
-                if len(available_edge_clusters) > 0:
-                    available_edge_clusters.sort(key=lambda edge_cluster: edge_cluster.carbon_intensity)
-                    selected_edge_cluster = available_edge_clusters[0]
-                    print("selected edge cluster: ", selected_edge_cluster.name)
-                    if selected_edge_cluster.run(process):
-                        self.__delay_pool.remove_process(process.name)
-
-            for process in selected_processes:
-                if process.power_draw_mean > self.__power_threshold:
-                     clusters = self.__edge_clusters_dict
-                     deadline_hours = math.ceil(process.deadline / 3600)
-                     forecast_hours = range(0, deadline_hours)
-         
-                     #print("forecast hours: ", forecast_hours)
-
-                     forecast_data = {}
-                     for cluster_name, cluster_obj in clusters.items():
-                         hourly_values = []
-                         for hour in forecast_hours:
-                             future_seconds = hour * 3600
-                             intensity = cluster_obj.carbon_intensity_future(future_seconds)
-                             hourly_values.append(intensity)
-                             forecast_data[cluster_name] = hourly_values
-         
-                     df = pd.DataFrame.from_dict(forecast_data, 
-                             orient='index', 
-                             columns=[f'H+{h}' for h in forecast_hours])
-                     best_hour = df.min().idxmin()
-                     #print("process: ", process.name, " best hour: ", best_hour, "power draw: ", process.power_draw_mean, "deadline: ", process.deadline)
-     
-                     if best_hour == 'H+0':
-                         available_edge_clusters = [edge_cluster for edge_cluster in self.__edge_clusters_dict.values() if edge_cluster.available]                         
-                         print("Available clusters:", len(available_edge_clusters))
-                         if len(available_edge_clusters) < 1:
-                             process.deadline = -1
-                         else:
-                            available_edge_clusters.sort(key=lambda edge_cluster: edge_cluster.carbon_intensity)
-                            selected_edge_cluster = available_edge_clusters[0]
-                            print("selected edge cluster: ", selected_edge_cluster.name, "carbon intensity: ", selected_edge_cluster.carbon_intensity)
-     
-                            if selected_edge_cluster.run(process):
-                                self.__delay_pool.remove_process(process.name)
-                else:
-                    available_edge_clusters = [edge_cluster for edge_cluster in self.__edge_clusters_dict.values() if edge_cluster.available]
-                    if len(available_edge_clusters) > 0:
-                        available_edge_clusters.sort(key=lambda edge_cluster: edge_cluster.carbon_intensity)
-                        selected_edge_cluster = available_edge_clusters[0]
-     
-                        if selected_edge_cluster.run(process):
-                            self.__delay_pool.remove_process(process.name)
+            self.__priority_pool.print_pool()
         
         if self.__alg == 'reservation':
             #print("------------------------------- reservation background -------------------------------")
             selected_processes = self.__reservation.select_processes()
 
-            #self.__reservation.print()
-
-            # if self.tick_count == 14616:
-            #      print("-------------------------------------------------------------- BEFORE SCHEDULING ")
-            #      print("selected processes: ", selected_processes)
-            #      print("reservation pool: ")
-            #      self.__reservation.print()
-            #      for self.__edge_cluster in self.__edge_clusters_dict.values():
-            #          self.__edge_cluster.print_status()
-
-            # these processes must run now immediately
             for process in selected_processes:
                 selected_edge_cluster_name = process.planned_cluster_name
                 selected_edge_cluster = self.__edge_clusters_dict[selected_edge_cluster_name]
                     
                 if selected_edge_cluster.run(process):
                     print(self.tick_count, "Successfully started process:", process.name, "on planned edge cluster:", process.planned_cluster_name)
-                    #self.__reservation.remove_process(process.name)
                 else:
-                    print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXxx")
                     print(self.tick_count,"ERROR failed to start process:", process.name, "on planned edge cluster:", process.planned_cluster_name)
                     print("Tick: ", self.tick_count)
                     self.__reservation.print()
@@ -205,58 +107,6 @@ class Scheduler:
 
                     self.__reservation.dump_json("error.json")
                     os._exit(1)
-
-            # if self.tick_count == 14616:
-            #      print("-------------------------------------------------------------- AFTER SCHEDULING ")
-            #      print("reservation pool after scheduling: ")
-            #      self.__reservation.print()
-            #      for self.__edge_cluster in self.__edge_clusters_dict.values():
-            #          self.__edge_cluster.print_status()
-            #      os._exit(1)
-        
-        if self.__alg == 'timepacking':
-            #print("------------------------------- reservation background -------------------------------")
-            selected_processes = self.__timepacking.select_processes()
-
-            # these processes must run now immediately
-            for process in selected_processes:
-                selected_edge_cluster_name = process.planned_cluster_name
-                selected_edge_cluster = self.__edge_clusters_dict[selected_edge_cluster_name]
-                    
-                if selected_edge_cluster.run(process):
-                    print(self.tick_count, "Successfully started process:", process.name, "on planned edge cluster:", process.planned_cluster_name)
-                else:
-                    print(self.tick_count,"ERROR failed to start process:", process.name, "on planned edge cluster:", process.planned_cluster_name)
-                    print("Tick: ", self.tick_count)
-                    self.__reservation.print()
-                    for self.__edge_cluster in self.__edge_clusters_dict.values():
-                        self.__edge_cluster.print_status()
-                    os._exit(1)
-
-        if self.__alg == 'genetic_timepool':
-            edge_clusters = list(self.__edge_clusters_dict.values())
-
-            schedule = self.__genetic_timepool.calc_schedule(edge_clusters)
-            print("schedule: ", schedule)
-            if schedule is None:
-                print("genetic_timepool, schedule is None")
-                return True # processes are queued in the pool, but don't need to run now 
-
-            if len(schedule) == 0:
-                print("genetic_timepool, schedule is empty")
-                return True  # processes are queued in the pool, but don't need to run now
-
-            for process_idx, edge_cluster_name in schedule.items():
-                #print("process_idx: ", process_idx)
-                print("edge_cluster_name: ", edge_cluster_name)
-                if edge_cluster_name == 'wait':
-                    continue
-                edge_cluster = self.__edge_clusters_dict[edge_cluster_name]
-                process = self.__genetic_timepool.get_process(process_idx)
-                print("selected process: ", process.name)
-                if edge_cluster.run(process):
-                    self.__genetic_timepool.remove_process(process_idx)
-            return True
 
     def process_completed(self, process):
         if self.__alg == 'reservation':
@@ -282,14 +132,7 @@ class Scheduler:
         elif self.__alg == 'greedy_binpack':
             print("----------------------- greedy bin packing scheduling -----------------------")
             ############# greedy bin packing scheduling ############
-            self.__greedy_binpack_pool.add_process(process)
-            self.__scheduled_processs += 1
-            return True
-        
-        elif self.__alg == 'delay':
-            print("----------------------- delay scheduling -----------------------")
-            ############# delay scheduling ############
-            self.__delay_pool.add_process(process)
+            self.__priority_pool.add_process(process)
             self.__scheduled_processs += 1
             return True
         
@@ -302,16 +145,7 @@ class Scheduler:
                 return True
             else:
                 return False
-        elif self.__alg == 'timepacking':
-            print("----------------------- timepacking scheduling -----------------------")
-            ############# timepacking scheduling ############
-            ok = self.__timepacking.add_process(process)
-            if ok:
-                self.__scheduled_processs += 1
-                return True
-            else:
-                return False
-
+        
         elif self.__alg == 'random':
             print("-----------------------  random scheduling -----------------------")
             ############# random scheduling ############
@@ -342,20 +176,10 @@ class Scheduler:
             'total_gpu_cost': self.total_gpu_cost,
         })
 
-        # run background processes every 60 seconds
-        # if self.tick_count % 60 == 0:
-        #     print("runnning background, tick: ", self.tick_count)
-        #     self.background()
-            
-        #self.tick_count += 1
         self.background()
         
-        self.__genetic_pool.tick()
-        self.__greedy_binpack_pool.tick()
-        self.__delay_pool.tick()
+        self.__priority_pool.tick()
         self.__reservation.tick()
-        self.__timepacking.tick()
-        
         
     @property
     def num_edge_clusters(self):
