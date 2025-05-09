@@ -69,7 +69,7 @@ To make the dataset compatible with the simulator, it must be **resampled to a 1
 ```console
 python3 ./scripts/carbon/2_resample_carbon_cvs.py
 python3 ./scripts/carbon/2_trim_carbon_1s_30d.py
-```console
+```
 
 It will generate a CSV file with the following format:
 
@@ -139,14 +139,13 @@ Below is a sample of its content:
 
 The other CSV files contains utilisation info for each cluster.
 
-**Note:**  
-The `timepacking` variable is used to disable **time-shifting**, so that the scheduler considers **only spatial placement** in the presence of resource contentions.
+**Note:** The `timepacking` variable is used to disable **time-shifting**, so that the scheduler considers **only spatial placement** in the presence of resource contentions.
 
 ```python
 timepacking = True
 ```
 
-## Example of Simulator script.
+## Example of Simulator script
 ```python
 import sys
 sys.path.append('../../carbonsim/simulator')
