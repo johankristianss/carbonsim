@@ -7,8 +7,6 @@ The simulator can **replay workloads** using data from the [MIT Supercloud datas
 
 This enables the evaluation of **various scheduling and optimization algorithms**, such as **time-shifting**, to explore strategies for **reducing carbon emissions**.
 
-[arch.png]
-
 # Dataset Generation
 Below are instructions how to generate a CarbonSim compatible dataset. 
 If you prefer not to generate the dataset yourself, you can request a pre-generated version (~100 GB) by contacting **Johan Kristiansson** at [johan.kristiansson@ltu.se](mailto:johan.kristiansson@ltu.se).
