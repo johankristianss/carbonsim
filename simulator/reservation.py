@@ -136,13 +136,13 @@ class Reservation:
                     energy = self.calculate_energy(process, cluster_name, tick)
                     possible_assignments.append((energy, cluster_name, tick))
                 else:
-                    timepacking = True
+                    timepacking = False
 
         
         # sort by energy, reverse order = False
         #possible_assignments.sort(key=lambda x: x[0], reverse=False)
 
-        timepacking = True 
+        #timepacking = True 
 
         if timepacking:
             best_assignment = self.find_next_timeslot(possible_assignments)

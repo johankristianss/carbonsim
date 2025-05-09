@@ -52,6 +52,5 @@ for csv_file in csv_files:
     output_path = os.path.join(output_dir, csv_file)
     df.to_csv(output_path, index=False)
 
-print("!!!!!!!!!!!!!!!!!!!!!!!!")
 print(f"Processed {num_files} files. Updated files are saved in {output_dir}.")
 
